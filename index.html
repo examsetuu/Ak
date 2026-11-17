@@ -4474,6 +4474,9 @@
     check: '<path d="M20 6 9 17l-5-5"/>',
     bot: '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
     user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    key: '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
+    eye: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
+    eyeOff: '<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>',
   };
 
   function icon(name, cls, filled) {
@@ -4617,6 +4620,26 @@
     }
   }
 
+  function loadSavedGeminiKey() {
+    try {
+      return (localStorage.getItem('examsetu_gemini_api_key') || '').trim();
+    } catch {
+      return '';
+    }
+  }
+
+  function saveGeminiKeyToStorage(keyVal) {
+    const clean = String(keyVal || '').trim();
+    try {
+      if (clean) {
+        localStorage.setItem('examsetu_gemini_api_key', clean);
+      } else {
+        localStorage.removeItem('examsetu_gemini_api_key');
+      }
+    } catch {}
+    return clean;
+  }
+
   const state = {
     exams: DATA.INITIAL_EXAMS.slice(),
     selectedCategory: 'All',
@@ -4652,6 +4675,11 @@
     chatInput: '',
     chatLoading: false,
     copiedChatId: null,
+    geminiApiKey: loadSavedGeminiKey(),
+    isKeyPanelOpen: false,
+    keyInputDraft: '',
+    keyPanelMsg: '',
+    showKeyPlain: false,
     resizer: {
       exam: 'SSC',
       docIndex: 0,
@@ -6520,17 +6548,525 @@
     ],
   };
 
-  function buildLocalVerifiedFallback(query, noticeMsg, lang) {
-    const q = String(query || '').toLowerCase();
-    const stopWords = new Set(['exam', 'date', 'dates', 'status', 'latest', 'check', 'for', 'and', 'the', 'via', 'with', 'official', 'updates', 'update']);
-    const tokens = q.split(/[\s,/?()]+/).filter(function (tok) { return tok.length >= 2 && !stopWords.has(tok); });
+  const LOCAL_EXAM_PLAYBOOKS = {
+    'RRB NTPC': {
+      docBoard: 'RRB',
+      docNoteEn: 'Plain white background, clear face without cap/goggles; match signature with OMR/CBT attendance sheet.',
+      docNoteHi: 'सफेद पृष्ठभूमि, बिना टोपी/चश्मे का स्पष्ट चेहरा; हस्ताक्षर परीक्षा शीट से मेल खाने चाहिए।',
+      patternEn: [
+        'CBT-1 (Screening, 90 min, 100 Q / 100 Marks): General Awareness (40 Q), Mathematics (30 Q), General Intelligence & Reasoning (30 Q). -1/3 negative marking.',
+        'CBT-2 (Merit Stage, 90 min, 120 Q / 120 Marks): General Awareness (50 Q), Mathematics (35 Q), GI & Reasoning (35 Q). Followed by CBAT (Station Master) / Typing Skill Test (Clerk posts).',
+      ],
+      patternHi: [
+        'CBT-1 (स्क्रीनिंग, 90 मिनट, 100 प्रश्न / 100 अंक): सामान्य जागरूकता (40), गणित (30), रीजनिंग (30)। 1/3 नेगेटिव मार्किंग।',
+        'CBT-2 (मेरिट, 90 मिनट, 120 प्रश्न / 120 अंक): सामान्य जागरूकता (50), गणित (35), रीजनिंग (35)। इसके बाद CBAT / टाइपिंग टेस्ट।',
+      ],
+      cutoffEn: 'Expected CBT-1 Normalized Safe Target (out of 100, varies by RRB zone): UR 73–80 | OBC 68–75 | EWS 66–73 | SC 58–65 | ST 52–60. Aim for 78+ raw/normalized score for Station Master / Commercial Apprentice zones.',
+      cutoffHi: 'अपेक्षित CBT-1 नॉर्मलाइज्ड सेफ स्कोर (100 में से, RRB ज़ोन के अनुसार): UR 73–80 | OBC 68–75 | EWS 66–73 | SC 58–65 | ST 52–60। सुरक्षित चयन हेतु 78+ का लक्ष्य रखें।',
+      strategyEn: [
+        'Days 1–10 (Foundation + Weightage): Finish NCERT Class 8–10 Science, Static GK (Polity, History, Geography), Arithmetic (Percentage, Ratio, Time & Work, SI/CI, Mensuration) and daily 30 Reasoning puzzles.',
+        'Days 11–20 (PYQs + Sectional Speed): Solve 10–15 previous RRB NTPC shifts; focus on high-yield GA (Railways budget, schemes, sports, awards, science) and improve calculation speed under 90-min timer.',
+        'Days 21–30 (Mocks + Error Log): Attempt 1 full CBT mock every alternate day, analyze wrong/skipped questions in an error notebook, and revise formulas + last 8 months Current Affairs.',
+      ],
+      strategyHi: [
+        'दिन 1–10 (आधार व मुख्य विषय): NCERT कक्षा 8–10 विज्ञान, स्टैटिक GK (संविधान, इतिहास, भूगोल), अंकगणित (प्रतिशत, अनुपात, समय-कार्य, ब्याज, क्षेत्रमिति) और रोज़ 30 रीजनिंग प्रश्न हल करें।',
+        'दिन 11–20 (PYQ व गति अभ्यास): पिछले 10–15 RRB NTPC शिफ्ट पेपर हल करें; रेलवे/सरकारी योजनाओं, खेल, पुरस्कार और विज्ञान पर विशेष ध्यान दें।',
+        'दिन 21–30 (मॉक टेस्ट व सुधार): हर दूसरे दिन 1 फुल CBT मॉक दें, गलत प्रश्नों की नोटबुक दोहराएं तथा गणित फॉर्मूले व पिछले 8 माह के करेंट अफेयर्स का रिवीजन करें।',
+      ],
+    },
+    'SSC CGL': {
+      docBoard: 'SSC',
+      docNoteEn: 'Live webcam photo capture in SSC OTR / mySSC app + black/blue ink signature on white paper (10–20 KB JPEG, horizontal box).',
+      docNoteHi: 'SSC OTR / mySSC ऐप से लाइव फोटो कैप्चर अनिवार्य + सफेद कागज पर स्पष्ट हस्ताक्षर (10–20 KB JPEG)।',
+      patternEn: [
+        'Tier-1 (Qualifying, 60 min, 100 Q / 200 Marks): Reasoning (25 Q), GA (25 Q), Quant (25 Q), English (25 Q). +2 / -0.50 marking.',
+        'Tier-2 (Merit + Dest): Paper-1 Section I (Maths 30 Q + Reasoning 30 Q), Section II (English 45 Q + GA 25 Q) = 390 Marks, plus Computer Knowledge (20 Q qualifying) & Typing (DEST).',
+      ],
+      patternHi: [
+        'टियर-1 (क्वालिफाइंग, 60 मिनट, 100 प्रश्न / 200 अंक): रीजनिंग (25), GA (25), गणित (25), अंग्रेजी (25)। -0.50 नेगेटिव मार्किंग।',
+        'टियर-2 (मेरिट): सेक्शन-1 (गणित 30 + रीजनिंग 30), सेक्शन-2 (अंग्रेजी 45 + GA 25) = कुल 390 अंक + कंप्यूटर (20 प्रश्न क्वालिफाइंग) व टाइपिंग टेस्ट (DEST)।',
+      ],
+      cutoffEn: 'Expected Tier-1 Safe Score (out of 200): UR 145–156 | OBC 140–150 | EWS 138–148 | SC 120–132 | ST 110–122. Tier-2 4600-GP target: 325+ / 390.',
+      cutoffHi: 'अपेक्षित टियर-1 सेफ स्कोर (200 में से): UR 145–156 | OBC 140–150 | EWS 138–148 | SC 120–132 | ST 110–122। टियर-2 में अच्छी पोस्ट के लिए 325+/390 लक्ष्य रखें।',
+      strategyEn: [
+        'Days 1–10: Revise Advanced Maths (Geometry, Trigonometry, Algebra, Mensuration) + Arithmetic theorems, 120 Grammar rules + daily 50 Vocab (Blackbook/PYQ), and Lucent/NCERT Static GK.',
+        'Days 11–20: Timed 60-min sectional drills (Reasoning in 12 min, GA 7 min, English 13 min, Quant 28 min) + Tier-2 Computer fundamentals (MS Office, Shortcuts, Networking).',
+        'Days 21–30: Full-length SSC PYQ mocks + typing practice (27 WPM for DEST) + revise wrong Quant/English questions twice.',
+      ],
+      strategyHi: [
+        'दिन 1–10: एडवांस गणित (ज्यामिति, त्रिकोणमिति, बीजगणित) + अंकगणित, ग्रामर के प्रमुख नियम व रोज़ 50 शब्दावली, तथा लुसेंट/NCERT स्टैटिक GK पूरा करें।',
+        'दिन 11–20: 60 मिनट समयबद्ध सेक्शनल अभ्यास (रीजनिंग 12 मि., GA 7 मि., अंग्रेजी 13 मि., गणित 28 मि.) और कंप्यूटर शॉर्टकट/नेटवर्किंग दोहराएं।',
+        'दिन 21–30: फुल PYQ मॉक टेस्ट + 27 WPM टाइपिंग अभ्यास (DEST) + गलत हुए प्रश्नों का दोबारा रिवीजन।',
+      ],
+    },
+    'SSC CHSL': {
+      docBoard: 'SSC',
+      docNoteEn: 'Live OTR photo + clean 10–20 KB horizontal signature; ensure exact DOB & category certificate validity.',
+      docNoteHi: 'SSC OTR लाइव फोटो व 10–20 KB स्पष्ट हस्ताक्षर; 12वीं रोल नंबर व जाति प्रमाण पत्र तिथि की जांच करें।',
+      patternEn: [
+        'Tier-1 (60 min, 100 Q / 200 Marks): English, GI & Reasoning, Quant, GA (25 Q each). -0.50 negative.',
+        'Tier-2: Maths (30 Q), Reasoning (30 Q), English (40 Q), GA (20 Q) = 360 Marks + Computer (15 Q) & LDC/DEO Skill/Typing Test.',
+      ],
+      patternHi: [
+        'टियर-1 (60 मिनट, 100 प्रश्न / 200 अंक): अंग्रेजी, रीजनिंग, गणित, GA (प्रत्येक 25 प्रश्न)। -0.50 नेगेटिव।',
+        'टियर-2: गणित (30), रीजनिंग (30), अंग्रेजी (40), GA (20) = 360 अंक + कंप्यूटर (15 प्रश्न) व LDC/DEO टाइपिंग टेस्ट।',
+      ],
+      cutoffEn: 'Expected Tier-1 LDC/JSA Cutoff (out of 200): UR 148–158 | OBC 144–153 | EWS 140–150 | SC 128–138 | ST 118–128.',
+      cutoffHi: 'अपेक्षित टियर-1 कट-ऑफ (200 में से): UR 148–158 | OBC 144–153 | EWS 140–150 | SC 128–138 | ST 118–128।',
+      strategyEn: [
+        'Days 1–10: High-frequency SSC 10+2 Quant & Reasoning topics + daily reading comprehension & cloze test.',
+        'Days 11–20: Solve recent 2024–2026 CHSL shifts + Static GK (Art & Culture, Census, Polity, Current Affairs).',
+        'Days 21–30: Daily 1 full mock + 15 min daily English/Hindi typing speed (35 WPM / 30 WPM).',
+      ],
+      strategyHi: [
+        'दिन 1–10: 10+2 स्तर का गणित व रीजनिंग अभ्यास + रोज़ क्लोज़ टेस्ट व वोकैबुलरी।',
+        'दिन 11–20: पिछले वर्षों के CHSL शिफ्ट पेपर + कला-संस्कृति, जनगणना, संविधान व करेंट अफेयर्स।',
+        'दिन 21–30: रोज़ 1 फुल मॉक टेस्ट + 15 मिनट टाइपिंग अभ्यास (35 WPM अंग्रेजी / 30 WPM हिंदी)।',
+      ],
+    },
+    'SSC MTS': {
+      docBoard: 'SSC',
+      docNoteEn: 'SSC OTR live photo capture required + 10–20 KB clean black/blue ink signature.',
+      docNoteHi: 'SSC OTR लाइव फोटो अनिवार्य + 10–20 KB स्पष्ट हस्ताक्षर।',
+      patternEn: [
+        'Session I (45 min, NO Negative Marking, Qualifying): Numerical Ability (20 Q / 60 Marks) + Reasoning (20 Q / 60 Marks).',
+        'Session II (45 min, MERIT DECIDER, -1 mark per wrong answer): General Awareness (25 Q / 75 Marks) + English Language (25 Q / 75 Marks) = 150 Marks. (+ PET/PST for Havaldar).',
+      ],
+      patternHi: [
+        'सेशन-1 (45 मिनट, नेगेटिव मार्किंग नहीं, केवल क्वालिफाइंग): गणित (20 प्रश्न / 60 अंक) + रीजनिंग (20 प्रश्न / 60 अंक)।',
+        'सेशन-2 (45 मिनट, अंतिम मेरिट इसी से, -1 नेगेटिव मार्किंग): सामान्य जागरूकता (25 प्रश्न / 75 अंक) + अंग्रेजी (25 प्रश्न / 75 अंक) = 150 अंक। (हवलदार हेतु PET/PST)।',
+      ],
+      cutoffEn: 'Expected Session-II Merit Target (out of 150, varies by state): UR 132–142 | OBC 128–138 | EWS 126–136 | SC 118–128 | ST 110–122. Remember Session I is only qualifying!',
+      cutoffHi: 'अपेक्षित सेशन-2 कट-ऑफ (150 में से, राज्यवार): UR 132–142 | OBC 128–138 | EWS 126–136 | SC 118–128 | ST 110–122। ध्यान दें: सेशन-1 केवल क्वालिफाइंग है!',
+      strategyEn: [
+        'Days 1–10: Give 75% time to Session II (GA + English)! Complete Static GK (Dance, Festivals, Books, Rivers, Polity, Biology) + daily 40 Idioms/OWS/Synonyms.',
+        'Days 11–20: Practice Cloze Tests, Error Spotting, and SSC MTS PYQ GK questions + light Session I speed drills to comfortably clear qualifying cutoff.',
+        'Days 21–30: Take full two-session mocks without blind guessing in Session II (avoid -1 penalty); keep accuracy >88% in English & GA.',
+      ],
+      strategyHi: [
+        'दिन 1–10: 75% समय सेशन-2 (GA + अंग्रेजी) को दें! स्टैटिक GK (नृत्य, त्योहार, पुस्तकें, नदियां, संविधान, जीवविज्ञान) व रोज़ 40 मुहावरे/पर्यायवाची दोहराएं।',
+        'दिन 11–20: क्लोज़ टेस्ट, एरर स्पॉटिंग और SSC MTS पिछले वर्षों के GA प्रश्न हल करें + सेशन-1 हेतु बेसिक गणित-रीजनिंग अभ्यास।',
+        'दिन 21–30: दोनों सेशन के फुल मॉक दें; सेशन-2 में -1 नेगेटिव मार्किंग से बचने हेतु 88%+ सटीकता बनाए रखें।',
+      ],
+    },
+    'SSC CPO': {
+      docBoard: 'SSC',
+      docNoteEn: 'Live OTR photo + clean 10–20 KB horizontal signature; Driving License mandatory for Delhi Police SI male candidates.',
+      docNoteHi: 'लाइव OTR फोटो + 10–20 KB हस्ताक्षर; दिल्ली पुलिस SI पुरुष अभ्यर्थियों के लिए वैध ड्राइविंग लाइसेंस आवश्यक।',
+      patternEn: [
+        'Paper-I (120 min, 200 Q / 200 Marks): GI & Reasoning (50), GA (50), Quant (50), English (50). -0.25 negative.',
+        'Stage-II (PET/PST Qualifying): 1600m run (6.5 min men / 800m 4 min women), Long/High jump, Shot put. Paper-II (120 min): English Language & Comprehension (200 Q / 200 Marks).',
+      ],
+      patternHi: [
+        'पेपर-1 (120 मिनट, 200 प्रश्न / 200 अंक): रीजनिंग (50), GA (50), गणित (50), अंग्रेजी (50)। -0.25 नेगेटिव।',
+        'स्टेज-2 (PET/PST शारीरिक परीक्षा) + पेपर-2 (120 मिनट): केवल अंग्रेजी भाषा व कॉम्प्रिहेंशन (200 प्रश्न / 200 अंक)।',
+      ],
+      cutoffEn: 'Expected Paper-I Cutoff (out of 200): Male UR 138–148 | OBC 130–142 | EWS 128–138 | SC 112–124 | ST 106–118 (Female typically +4–8 higher due to fewer vacancies). Final Paper-I+II Delhi Police SI target: 325+/400.',
+      cutoffHi: 'अपेक्षित पेपर-1 कट-ऑफ (200 में से): पुरुष UR 138–148 | OBC 130–142 | EWS 128–138 | SC 112–124 | ST 106–118। अंतिम मेरिट (पेपर 1+2) में दिल्ली पुलिस SI हेतु 325+/400 लक्ष्य रखें।',
+      strategyEn: [
+        'Days 1–10: High-weightage English (250/400 total final marks come from English!) — daily 2 Reading Passages, Active/Passive, Narration, Vocab + Quant & Reasoning PYQs.',
+        'Days 11–20: Timed 200-Q Paper-I practice + start morning endurance running (1600m pacing) to pass PET smoothly without injury.',
+        'Days 21–30: Full 2-hour mocks + last 6 months Defence/Polity/Current Affairs revision + weak-topic error notebook.',
+      ],
+      strategyHi: [
+        'दिन 1–10: अंग्रेजी पर सर्वाधिक ध्यान (अंतिम 400 में से 250 अंक अंग्रेजी के!) — रोज़ पैसेज, एक्टिव/पैसिव, नरेशन व शब्दावली + गणित-रीजनिंग PYQ।',
+        'दिन 11–20: 200 प्रश्नों का समयबद्ध पेपर-1 अभ्यास + सुबह 1600 मीटर दौड़ और लंबी/ऊंची कूद का नियमित अभ्यास शुरू करें।',
+        'दिन 21–30: 2 घंटे के फुल मॉक टेस्ट + पिछले 6 माह के रक्षा/संविधान करेंट अफेयर्स का रिवीजन।',
+      ],
+    },
+    'SSC GD': {
+      docBoard: 'SSC',
+      docNoteEn: 'Live OTR photo + 10–20 KB signature; verify state/border/naxal domicile & NCC certificate details for bonus marks.',
+      docNoteHi: 'लाइव OTR फोटो + 10–20 KB हस्ताक्षर; राज्य/बॉर्डर मूल निवास व NCC बोनस अंक प्रमाण पत्र जांचें।',
+      patternEn: [
+        'CBE (60 min, 80 Q / 160 Marks): Reasoning (20 Q), GK/GA (20 Q), Elementary Maths (20 Q), English OR Hindi (20 Q). -0.25 negative.',
+        'Followed by PET/PST (5 km run in 24 min men / 1.6 km in 8.5 min women) and Medical Exam.',
+      ],
+      patternHi: [
+        'कंप्यूटर परीक्षा (60 मिनट, 80 प्रश्न / 160 अंक): रीजनिंग (20), GK/GA (20), प्रारंभिक गणित (20), अंग्रेजी या हिंदी (20)। -0.25 नेगेटिव।',
+        'इसके बाद PET/PST (पुरुष 5 किमी 24 मिनट / महिला 1.6 किमी 8.5 मिनट) व मेडिकल।',
+      ],
+      cutoffEn: 'Expected CBT Safe Score (out of 160, varies widely by state): High-cutoff states UR 128–140 | OBC 124–136 | SC/ST 110–125.',
+      cutoffHi: 'अपेक्षित CBT सेफ स्कोर (160 में से, राज्यवार): उच्च कट-ऑफ राज्यों में UR 128–140 | OBC 124–136 | SC/ST 110–125।',
+      strategyEn: [
+        'Days 1–10: Lock 36+/40 in Reasoning + Hindi/English + core Arithmetic formulas (Percentage, Ratio, Profit/Loss, Mensuration 2D/3D).',
+        'Days 11–20: Solve 15 SSC GD previous shift papers in 55 min + revise Static GK (Census, Constitution, Sports, Defence).',
+        'Days 21–30: Daily mock + morning 5 km stamina jogging alongside written revision.',
+      ],
+      strategyHi: [
+        'दिन 1–10: रीजनिंग व हिंदी/अंग्रेजी में 36+/40 स्कोर पक्का करें + अंकगणित व 2D/3D क्षेत्रमिति सूत्र दोहराएं।',
+        'दिन 11–20: 15 पिछले SSC GD पेपर 55 मिनट में हल करें + स्टैटिक GK दोहराएं।',
+        'दिन 21–30: रोज़ मॉक टेस्ट + सुबह 5 किमी दौड़ की सहनशक्ति बढ़ाएं।',
+      ],
+    },
+    'IBPS': {
+      docBoard: 'IBPS',
+      docNoteEn: 'Passport Photo (200x230 px, 20–50 KB), Black Ink Signature (140x60 px, 10–20 KB, NOT in ALL CAPS), Left Thumb Impression (240x240 px, 20–50 KB), & Handwritten Declaration (800x400 px, 50–100 KB).',
+      docNoteHi: 'पासपोर्ट फोटो (200x230 px, 20–50 KB), काली स्याही हस्ताक्षर (140x60 px, 10–20 KB, कैपिटल लेटर में नहीं), बायां अंगूठा (240x240 px, 20–50 KB) व हस्तलिखित घोषणा पत्र (800x400 px, 50–100 KB)।',
+      patternEn: [
+        'Prelims (60 min sectional timing, 100 Q / 100 Marks): English (30 Q, 20 min), Quant (35 Q, 20 min), Reasoning (35 Q, 20 min). -0.25 negative.',
+        'Mains (PO: Objective + Descriptive Letter/Essay; Clerk: 190 Q / 200 Marks): GA/Banking Awareness, Reasoning & Computer, Data Analysis/Quant, English. Sectional + overall cutoffs apply.',
+      ],
+      patternHi: [
+        'प्रीलिम्स (60 मिनट सेक्शनल समय, 100 प्रश्न / 100 अंक): अंग्रेजी (30 प्रश्न, 20 मि.), गणित (35 प्रश्न, 20 मि.), रीजनिंग (35 प्रश्न, 20 मि.)। -0.25 नेगेटिव।',
+        'मेन्स: बैंकिंग/फाइनेंशियल अवेयरनेस, रीजनिंग व कंप्यूटर, डाटा इंटरप्रिटेशन (DI), अंग्रेजी (+ PO में डिस्क्रिप्टिव निबंध/पत्र)। सेक्शनल कट-ऑफ अनिवार्य।',
+      ],
+      cutoffEn: 'Expected Prelims Cutoff (out of 100): IBPS PO UR 52–59 | OBC/EWS 49–56 | SC/ST 42–49. IBPS Clerk (statewise): 72–84. IBPS RRB Clerk/PO (80 marks, no English): Clerk 66–76, PO 50–58.',
+      cutoffHi: 'अपेक्षित प्रीलिम्स कट-ऑफ (100 में से): IBPS PO UR 52–59 | OBC/EWS 49–56; IBPS Clerk (राज्यवार) 72–84; IBPS RRB (80 अंक) Clerk 66–76 / PO 50–58।',
+      strategyEn: [
+        'Days 1–10: Speed Maths (Simplification, Quadratic, Number Series, DI) + daily 4 Seating/Puzzle sets + RC/Para Jumbles.',
+        'Days 11–20: Sectional 20-min timer drills to clear all 3 sectional cutoffs + 4 months RBI/Banking/Financial Current Affairs for Mains.',
+        'Days 21–30: Daily full Prelims/Mains mock + analyze puzzle selection (skip traps early to maximize attempts with 95% accuracy).',
+      ],
+      strategyHi: [
+        'दिन 1–10: स्पीड मैथ्स (सिम्प्लीफिकेशन, द्विघात समीकरण, सीरीज, DI) + रोज़ 4 पज़ल/सीटिंग सेट व अंग्रेजी RC।',
+        'दिन 11–20: प्रत्येक 20 मिनट के सेक्शनल कट-ऑफ हेतु टाइमर अभ्यास + मेन्स के लिए पिछले 4 माह के बैंकिंग/RBI करेंट अफेयर्स।',
+        'दिन 21–30: रोज़ 1 फुल मॉक टेस्ट + कठिन पज़ल छोड़कर 95% सटीकता के साथ अधिक स्कोर करने की रणनीति।',
+      ],
+    },
+    'SBI': {
+      docBoard: 'IBPS',
+      docNoteEn: 'Same as IBPS banking specs: 20–50 KB Photo, 10–20 KB Black Ink Signature, 20–50 KB Left Thumb Impression, and 50–100 KB SBI Handwritten Declaration.',
+      docNoteHi: 'IBPS समान मानक: 20–50 KB फोटो, 10–20 KB काली स्याही हस्ताक्षर, 20–50 KB बायां अंगूठा व 50–100 KB SBI हस्तलिखित घोषणा पत्र।',
+      patternEn: [
+        'Prelims (60 min, 100 Q / 100 Marks): English (30), Quant (35), Reasoning (35) — No sectional cutoff in SBI Clerk/PO Prelims! Only overall merit.',
+        'Mains + PO Psychometric/Group Exercise & Interview (Clerk has Local Language Proficiency Test if 10th/12th mark sheet lacks state language).',
+      ],
+      patternHi: [
+        'प्रीलिम्स (60 मिनट, 100 प्रश्न): अंग्रेजी (30), गणित (35), रीजनिंग (35) — SBI में प्रीलिम्स सेक्शनल कट-ऑफ नहीं, केवल कुल मेरिट।',
+        'मेन्स + PO इंटरव्यू/ग्रुप एक्सरसाइज (क्लर्क में स्थानीय भाषा परीक्षण यदि 10वीं/12वीं में वह भाषा न हो)।',
+      ],
+      cutoffEn: 'Expected Prelims Cutoff: SBI PO UR 58–65 | OBC/EWS 55–62. SBI Clerk (statewise): UR 70–82.',
+      cutoffHi: 'अपेक्षित प्रीलिम्स कट-ऑफ: SBI PO UR 58–65; SBI Clerk (राज्यवार) 70–82।',
+      strategyEn: [
+        'Days 1–10: Master PO-level DI (Caselet, Missing, Pie/Bar) + Moderate-High Puzzles & Critical Reasoning.',
+        'Days 11–20: Daily 2 Mains-level passages + 6 months RBI Circulars, Union Budget & Banking Awareness.',
+        'Days 21–30: Daily full mock + Descriptive typing practice (Letter & Essay within 30 min for PO).',
+      ],
+      strategyHi: [
+        'दिन 1–10: PO स्तर की DI (केसलेट/मिसिंग) + पज़ल व क्रिटिकल रीजनिंग का अभ्यास।',
+        'दिन 11–20: मेन्स स्तर के पैसेज + पिछले 6 माह के RBI सर्कुलर, बजट व बैंकिंग अवेयरनेस।',
+        'दिन 21–30: रोज़ फुल मॉक + PO के लिए 30 मिनट में डिस्क्रिप्टिव निबंध/पत्र टाइपिंग अभ्यास।',
+      ],
+    },
+    'BPSC': {
+      docBoard: 'BPSC',
+      docNoteEn: 'Square Photo (250x250 px, 15–25 KB) + BOTH Hindi & English Signatures (220x100 px, 10–20 KB); live webcam capture during OTR/application.',
+      docNoteHi: 'स्क्वायर फोटो (250x250 px, 15–25 KB) + हिंदी और अंग्रेजी दोनों हस्ताक्षर (220x100 px, 10–20 KB); आवेदन के समय लाइव फोटो कैप्चर।',
+      patternEn: [
+        'Integrated CCE Prelims (120 min, 150 Q / 150 Marks, -1/3 negative): Modern History & Bihar History, General Science (Phy/Chem/Bio), Bihar Special GK & Geography, Indian Polity & Economy, National/International & Bihar Current Affairs, 10 Mental Ability/Maths Q.',
+        'Mains (Written Merit): General Hindi (100, Qualifying), GS Paper-1 (300), GS Paper-2 (300), Essay (300) = 900 Marks + Optional (MCQ Qualifying) + 120 Marks Interview.',
+      ],
+      patternHi: [
+        'प्रीलिम्स (120 मिनट, 150 प्रश्न / 150 अंक, -1/3 नेगेटिव): आधुनिक इतिहास व बिहार इतिहास, सामान्य विज्ञान, बिहार विशेष GK व भूगोल, राजव्यवस्था व अर्थव्यवस्था, करेंट अफेयर्स, 10 गणित प्रश्न।',
+        'मेन्स: सामान्य हिंदी (100 क्वालिफाइंग), GS पेपर-1 (300), GS पेपर-2 (300), निबंध (300) = 900 अंक + वैकल्पिक विषय (MCQ क्वालिफाइंग) + 120 अंक इंटरव्यू।',
+      ],
+      cutoffEn: 'Expected CCE Prelims Cutoff (out of 150): UR Male 94–104 | UR Female 84–94 | BC 88–98 | EBC 84–94 | EWS 86–96 | SC 76–86.',
+      cutoffHi: 'अपेक्षित CCE प्रीलिम्स कट-ऑफ (150 में से): UR पुरुष 94–104 | UR महिला 84–94 | BC 88–98 | EBC 84–94 | EWS 86–96 | SC 76–86।',
+      strategyEn: [
+        'Days 1–10 (Big 4 Pillars): Cover ~110/150 weightage — Modern History (especially 1857, Champaran, Quit India in Bihar), NCERT General Science, Bihar Special Geography/Census/Schemes, and Yearly Current Affairs.',
+        'Days 11–20: Solve last 10 years BPSC PYQs (64th to 70th/71st CCE) + Polity/Economy (Laxmikanth + Bihar Economic Survey/Budget).',
+        'Days 21–30: Full 150-Q OMR tests managing -1/3 negative marking + revise 10 Mental Ability formulas & Current Affairs highlights.',
+      ],
+      strategyHi: [
+        'दिन 1–10 (4 प्रमुख स्तंभ): लगभग 110/150 अंक कवर करें — आधुनिक भारत व बिहार इतिहास (1857, चंपारण), NCERT विज्ञान, बिहार स्पेशल GK/बजट व करेंट अफेयर्स।',
+        'दिन 11–20: पिछले 10 वर्षों के BPSC PYQ + भारतीय राजव्यवस्था, बिहार आर्थिक सर्वेक्षण व जनगणना दोहराएं।',
+        'दिन 21–30: -1/3 नेगेटिव मार्किंग नियंत्रण हेतु 150 प्रश्नों के फुल OMR टेस्ट व रिवीजन।',
+      ],
+    },
+    'BSSC': {
+      docBoard: 'BPSC',
+      docNoteEn: 'Passport photo with white/light background, separate Hindi & English signatures, plus clear Bihar Domicile, NCL/EWS & 12th/Typing/Computer certificates.',
+      docNoteHi: 'सफेद पृष्ठभूमि फोटो, हिंदी व अंग्रेजी दोनों हस्ताक्षर, तथा बिहार निवास, NCL/EWS और कंप्यूटर/टाइपिंग प्रमाण पत्र तैयार रखें।',
+      patternEn: [
+        'Prelims & Mains (135 min, 150 Q / 600 Marks, +4 / -1 negative): General Studies (50 Q), General Science & Mathematics (50 Q — 25 Science + 25 Maths), Mental Ability / Reasoning (50 Q).',
+        'Reasoning + Maths + Science alone carry 100/150 Q (400/600 Marks)! Hindi Paper in Mains is qualifying.',
+      ],
+      patternHi: [
+        'प्रीलिम्स व मेन्स (2 घंटे 15 मिनट, 150 प्रश्न / 600 अंक, +4 सही / -1 गलत): सामान्य अध्ययन (50), सामान्य विज्ञान व गणित (25+25 = 50), मानसिक क्षमता/रीजनिंग (50)।',
+        'रीजनिंग + गणित + विज्ञान से ही 100/150 प्रश्न (400/600 अंक) आते हैं! मेन्स में हिंदी पेपर क्वालिफाइंग है।',
+      ],
+      cutoffEn: 'Expected Prelims Qualifying Score (out of 600 / 150 Q): UR 420–455 (105–114 net correct Q) | BC 405–440 | EBC 390–425 | SC/ST 345–385.',
+      cutoffHi: 'अपेक्षित प्रीलिम्स सेफ स्कोर (600 अंकों / 150 प्रश्नों में): UR 420–455 (105–114 सही प्रश्न) | BC 405–440 | EBC 390–425 | SC/ST 345–385।',
+      strategyEn: [
+        'Days 1–10: Target 90%+ in Reasoning (50 Q) + Elementary Maths (25 Q) — daily practice of Series, Analogy, Dice, Syllogism, Percentage, Ratio, Profit/Loss, Time & Work.',
+        'Days 11–20: NCERT Class 6–10 Biology/Physics/Chemistry (25 Q) + Bihar GK, Five-Year Plans, Constitution, Books & Currencies (GS 50 Q).',
+        'Days 21–30: Full 150-Q speed sets under 125 minutes keeping wrong attempts minimal due to -1 negative marking per wrong answer.',
+      ],
+      strategyHi: [
+        'दिन 1–10: रीजनिंग (50 प्रश्न) + गणित (25 प्रश्न) में 90%+ सटीकता लक्ष्य रखें — सीरीज, पासा, न्याय निगमन, प्रतिशत, अनुपात, समय-कार्य का अभ्यास करें।',
+        'दिन 11–20: NCERT कक्षा 6–10 विज्ञान (25 प्रश्न) + बिहार GK, पंचवर्षीय योजनाएं, संविधान व विविध GK (50 प्रश्न) दोहराएं।',
+        'दिन 21–30: 125 मिनट में 150 प्रश्नों के फुल सेट हल करें और -1 नेगेटिव मार्किंग से बचें।',
+      ],
+    },
+    'NEET': {
+      docBoard: 'NTA',
+      docNoteEn: 'BOTH Passport Photo (10–200 KB) AND 4x6 Postcard Photo (400x600 px, 10–200 KB) showing 80% face with both ears visible + Signature (4–30 KB).',
+      docNoteHi: 'पासपोर्ट फोटो (10–200 KB) व 4x6 पोस्टकार्ड फोटो (400x600 px, 10–200 KB, दोनों कान व 80% चेहरा स्पष्ट) + हस्ताक्षर (4–30 KB) दोनों अनिवार्य।',
+      patternEn: [
+        'Pen-and-Paper OMR (180 min, 180 compulsory Q / 720 Marks, +4 / -1): Physics (45 Q / 180), Chemistry (45 Q / 180), Biology — Botany + Zoology (90 Q / 360).',
+      ],
+      patternHi: [
+        'पेन-पेपर OMR (180 मिनट, 180 अनिवार्य प्रश्न / 720 अंक, +4 / -1): भौतिकी (45 प्रश्न / 180), रसायन विज्ञान (45 प्रश्न / 180), जीव विज्ञान (90 प्रश्न / 360)।',
+      ],
+      cutoffEn: 'Expected Govt MBBS Safe Score (out of 720): AIQ General/OBC/EWS 635–660+ (State Quota ~605–640 depending on state) | SC 515–555 | ST 475–515.',
+      cutoffHi: 'अपेक्षित सरकारी MBBS सेफ स्कोर (720 में से): AIQ सामान्य/OBC/EWS 635–660+ (स्टेट कोटा ~605–640) | SC 515–555 | ST 475–515।',
+      strategyEn: [
+        'Days 1–10: Complete 100% NCERT line-by-line reading for Class 11 & 12 Biology (360 marks!) + Inorganic/Organic NCERT named reactions & trends.',
+        'Days 11–20: Physics high-yield formulas (Modern Physics, Electrostatics, Current, Optics, Mechanics) + Physical Chemistry numericals & PYQ 15-year drill.',
+        'Days 21–30: Daily 2:00 PM – 5:00 PM full OMR simulation (same NTA exam timing!) + OMR bubbling accuracy check & mistake notebook.',
+      ],
+      strategyHi: [
+        'दिन 1–10: कक्षा 11 व 12 NCERT जीव विज्ञान की हर पंक्ति (360 अंक!) व ऑर्गेनिक/इनऑर्गेनिक अभिक्रियाएं पूरी तरह दोहराएं।',
+        'दिन 11–20: भौतिकी के उच्च वेटेज सूत्र (आधुनिक भौतिकी, विद्युत, प्रकाशिकी) व फिजिकल केमिस्ट्री के पिछले 15 वर्षों के PYQ हल करें।',
+        'दिन 21–30: रोज़ दोपहर 2 से 5 बजे के असली परीक्षा समय में फुल OMR मॉक टेस्ट दें व गलत प्रश्नों का विश्लेषण करें।',
+      ],
+    },
+    'CUET': {
+      docBoard: 'NTA',
+      docNoteEn: 'NTA Passport Photo (200x230 px, 10–200 KB) showing 80% face + Signature (256x64 px, 4–30 KB) + Category/EWS/PwBD PDF.',
+      docNoteHi: 'NTA पासपोर्ट फोटो (200x230 px, 10–200 KB, 80% चेहरा स्पष्ट) + हस्ताक्षर (256x64 px, 4–30 KB)।',
+      patternEn: [
+        'CBT Exam (+5 / -1 marking, 60 min per paper): Language Test (Reading Comprehension, Literary Devices, Vocab — 50 Q), Class 12 NCERT Domain Subjects (up to 3–5 subjects as required by target university — 50 Q each), and General Test (Quant, Logical Reasoning, Static GK & Current Affairs — 50 Q).',
+      ],
+      patternHi: [
+        'CBT परीक्षा (+5 / -1 मार्किंग, प्रति पेपर 60 मिनट): भाषा (50 प्रश्न), कक्षा 12 NCERT आधारित डोमेन विषय (50 प्रश्न प्रत्येक) व जनरल टेस्ट (गणित, रीजनिंग, GK — 50 प्रश्न)।',
+      ],
+      cutoffEn: 'Expected Top DU / BHU / Central University Target: DU North Campus Honours (Language + 3 Domains = 750–800/1000 scale / 98–99+ percentile); always target 90%+ raw accuracy per chosen subject.',
+      cutoffHi: 'शीर्ष केंद्रीय विश्वविद्यालय (DU नॉर्थ कैंपस / BHU) लक्ष्य: चुने हुए विषयों में 90%+ सटीकता व 97–99+ पर्सेंटाइल।',
+      strategyEn: [
+        'Days 1–10: Strictly revise ONLY Class 12 NCERT textbooks (including deleted State/CBSE chapters if listed on NTA CUET syllabus) + Case-study/Assertion-Reason MCQs.',
+        'Days 11–20: Language passage speed + Vocabulary (Synonyms, Antonyms, Idioms, Figures of Speech) + General Test Arithmetic & Static GK.',
+        'Days 21–30: Subject-wise 60-min CBT mocks avoiding -1 negative guesses and verifying university subject mapping criteria.',
+      ],
+      strategyHi: [
+        'दिन 1–10: केवल कक्षा 12 की NCERT पुस्तकों (NTA सिलेबस के अनुसार) का गहन अध्ययन व केस-स्टडी MCQ अभ्यास।',
+        'दिन 11–20: भाषा के गद्यांश, मुहावरे, पर्यायवाची व जनरल टेस्ट के गणित-रीजनिंग दोहराएं।',
+        'दिन 21–30: प्रत्येक विषय के 60 मिनट CBT मॉक टेस्ट दें व लक्ष्य विश्वविद्यालय की विषय पात्रता जांचें।',
+      ],
+    },
+    'UPSC': {
+      docBoard: 'UPSC',
+      docNoteEn: 'UPSC OTR Square Photo (350x350 px, 20–300 KB; ensure plain background & recent photo clarity) + Signature (350x150 px, 20–300 KB).',
+      docNoteHi: 'UPSC OTR स्क्वायर फोटो (350x350 px, 20–300 KB) + हस्ताक्षर (350x150 px, 20–300 KB)।',
+      patternEn: [
+        'Prelims (Objective Screening, -1/3 negative): GS Paper-1 (100 Q / 200 Marks, decides cutoff) + CSAT Paper-2 (80 Q / 200 Marks, 33% / 66+ marks strictly qualifying).',
+        'Mains (1750 Marks Written Merit): Essay (250) + GS I–IV (4x250 = 1000) + Optional I & II (500) + Qualifying Indian Language & English. Interview: 275 Marks (Total Merit = 2025).',
+      ],
+      patternHi: [
+        'प्रीलिम्स (-1/3 नेगेटिव): GS पेपर-1 (100 प्रश्न / 200 अंक, मेरिट इसी से) + CSAT पेपर-2 (80 प्रश्न / 200 अंक, 33% / 66+ अंक क्वालिफाइंग अनिवार्य)।',
+        'मेन्स (1750 अंक लिखित): निबंध (250) + GS I–IV (1000) + वैकल्पिक विषय (500) + दो क्वालिफाइंग भाषा पेपर। साक्षात्कार: 275 अंक (कुल 2025)।',
+      ],
+      cutoffEn: 'Expected Prelims GS-1 Cutoff (out of 200): UR 88–98 | EWS 82–92 | OBC 85–95 | SC 74–84 | ST 68–78. CSAT 66/200 qualifying mandatory regardless of GS-1 score.',
+      cutoffHi: 'अपेक्षित प्रीलिम्स GS-1 कट-ऑफ (200 में से): UR 88–98 | EWS 82–92 | OBC 85–95 | SC 74–84 | ST 68–78। CSAT में 66/200 अंक अनिवार्य।',
+      strategyEn: [
+        'Days 1–10: High-ROI Static Core — Polity (Fundamental Rights, Parliament, Judiciary), Economy (Monetary Policy, Budget, BoP), Environment (Acts, Protected Areas, Conventions) & Modern History.',
+        'Days 11–20: Last 10 years UPSC Prelims & CSAT PYQs (analyze UPSC elimination/pair options carefully!) + dedicated 1 hour daily for CSAT RC & Maths.',
+        'Days 21–30: Consolidate PT365/Yearbook Current Affairs (Science & Tech, Places in News, International Organizations) + full 9:30 AM & 2:30 PM Sunday-schedule test runs.',
+      ],
+      strategyHi: [
+        'दिन 1–10: उच्च वेटेज विषय — राजव्यवस्था (मौलिक अधिकार, संसद, न्यायपालिका), अर्थव्यवस्था (RBI, बजट), पर्यावरण (कानून, राष्ट्रीय उद्यान) व आधुनिक इतिहास।',
+        'दिन 11–20: पिछले 10 वर्षों के UPSC प्रीलिम्स व CSAT PYQ हल करें + रोज़ 1 घंटा CSAT कॉम्प्रिहेंशन व गणित अभ्यास करें।',
+        'दिन 21–30: वार्षिक करेंट अफेयर्स (विज्ञान-तकनीक, चर्चित स्थल, अंतरराष्ट्रीय संगठन) दोहराएं और परीक्षा समय (9:30 AM / 2:30 PM) पर फुल टेस्ट दें।',
+      ],
+    },
+  };
 
-    const matched = state.exams.filter(function (exam) {
-      const hay = (
-        exam.n + ' ' + (exam.n_hi || '') + ' ' + exam.o + ' ' + exam.c + ' ' + (exam.st || '') + ' ' + (DATA.CATEGORY_ALIASES[exam.c] || '')
-      ).toLowerCase();
-      return tokens.some(function (tok) { return hay.includes(tok); });
-    }).slice(0, 4);
+  function getPlaybookForExam(exam) {
+    const n = (exam.n || '').toUpperCase();
+    if (n.indexOf('RRB NTPC') >= 0) return LOCAL_EXAM_PLAYBOOKS['RRB NTPC'];
+    if (n.indexOf('SSC CGL') >= 0) return LOCAL_EXAM_PLAYBOOKS['SSC CGL'];
+    if (n.indexOf('SSC CHSL') >= 0) return LOCAL_EXAM_PLAYBOOKS['SSC CHSL'];
+    if (n.indexOf('SSC MTS') >= 0) return LOCAL_EXAM_PLAYBOOKS['SSC MTS'];
+    if (n.indexOf('SSC CPO') >= 0) return LOCAL_EXAM_PLAYBOOKS['SSC CPO'];
+    if (n.indexOf('SSC GD') >= 0) return LOCAL_EXAM_PLAYBOOKS['SSC GD'];
+    if (n.indexOf('IBPS') >= 0) return LOCAL_EXAM_PLAYBOOKS['IBPS'];
+    if (n.indexOf('SBI') >= 0) return LOCAL_EXAM_PLAYBOOKS['SBI'];
+    if (n.indexOf('BSSC') >= 0) return LOCAL_EXAM_PLAYBOOKS['BSSC'];
+    if (n.indexOf('BPSC') >= 0) return LOCAL_EXAM_PLAYBOOKS['BPSC'];
+    if (n.indexOf('NEET') >= 0) return LOCAL_EXAM_PLAYBOOKS['NEET'];
+    if (n.indexOf('CUET') >= 0) return LOCAL_EXAM_PLAYBOOKS['CUET'];
+    if (n.indexOf('UPSC') >= 0) return LOCAL_EXAM_PLAYBOOKS['UPSC'];
+
+    const docBoard = n.indexOf('RRB') >= 0 || n.indexOf('RAILWAY') >= 0 ? 'RRB'
+      : n.indexOf('UPPSC') >= 0 || n.indexOf('UPSSSC') >= 0 ? 'UPPSC'
+      : n.indexOf('ARMY') >= 0 || n.indexOf('AGNIVEER') >= 0 ? 'ARMY'
+      : n.indexOf('CBSE') >= 0 || n.indexOf('CTET') >= 0 ? 'CBSE'
+      : n.indexOf('JEE') >= 0 || n.indexOf('UGC') >= 0 ? 'NTA'
+      : n.indexOf('BIHAR') >= 0 ? 'BPSC'
+      : 'SSC';
+
+    return {
+      docBoard: docBoard,
+      docNoteEn: 'Keep scanned documents clear on white paper, verify category/domicile certificate dates, and keep both Photo & Signature under exact KB limits.',
+      docNoteHi: 'सफेद पृष्ठभूमि पर स्पष्ट फोटो/हस्ताक्षर अपलोड करें, जाति/निवास प्रमाण पत्र की वैधता तिथि जांचें।',
+      patternEn: ['Official selection generally comprises Written/CBT Examination followed by Merit/Skill/PET or Document Verification as per ' + exam.o + ' notification.'],
+      patternHi: [exam.o + ' की आधिकारिक अधिसूचना के अनुसार लिखित/CBT परीक्षा तथा उसके बाद कौशल/शारीरिक परीक्षण या दस्तावेज़ सत्यापन।'],
+      cutoffEn: 'Check official normalized scorecards & previous cycle category-wise cutoffs (UR/OBC/EWS/SC/ST) linked on the official ' + exam.o + ' portal.',
+      cutoffHi: 'आधिकारिक ' + exam.o + ' पोर्टल पर पिछले चक्र की श्रेणीवार कट-ऑफ (UR/OBC/EWS/SC/ST) देखें।',
+      strategyEn: [
+        'Days 1–10: Cover high-weightage syllabus chapters & State/National GS fundamentals + Maths/Reasoning core formulas.',
+        'Days 11–20: Solve previous 5–8 official question papers of ' + exam.n + ' under timed conditions.',
+        'Days 21–30: Full-length mock tests every 2 days, error-log revision, and last 6 months Current Affairs.',
+      ],
+      strategyHi: [
+        'दिन 1–10: मुख्य सिलेबस, सामान्य अध्ययन व गणित/रीजनिंग के बुनियादी अध्याय पूरे करें।',
+        'दिन 11–20: ' + exam.n + ' के पिछले 5–8 आधिकारिक प्रश्न पत्र समयबद्ध तरीके से हल करें।',
+        'दिन 21–30: हर दूसरे दिन फुल मॉक टेस्ट, गलतियों का रिवीजन व पिछले 6 माह के करेंट अफेयर्स दोहराएं।',
+      ],
+    };
+  }
+
+  function hasWholeWord(hay, word) {
+    const escaped = String(word).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('(?:^|[^a-z0-9\u0900-\u097f])' + escaped + '(?:$|[^a-z0-9\u0900-\u097f])', 'i').test(hay);
+  }
+
+  const EXAM_STOP_WORDS = new Set([
+    'exam', 'exams', 'date', 'dates', 'status', 'latest', 'check', 'for', 'and', 'the', 'via',
+    'with', 'official', 'updates', 'update', 'what', 'when', 'how', 'who', 'where', 'share',
+    'give', 'tell', 'plan', 'strategy', 'revision', 'study', 'day', 'days', 'expected', 'cutoff',
+    'cutoffs', 'syllabus', 'pattern', 'photo', 'signature', 'sign', 'size', 'kb', 'pdf', 'form',
+    'forms', 'rules', 'rule', 'document', 'documents', 'eligibility', 'age', 'limit', 'relaxation',
+    'admit', 'card', 'result', 'results', 'answer', 'key', 'notification', 'apply', 'guide',
+    'prep', 'preparation', 'required', 'live', 'about', 'can', 'get', 'you', 'from', 'into',
+    'are', 'is', 'in', 'on', 'to', 'of', 'my', 'me', '30', '2026', '2027',
+    'कब', 'क्या', 'कैसे', 'बताएं', 'जानकारी', 'तिथि', 'तिथियां', 'परीक्षा', 'तैयारी', 'रणनीति',
+    'योजना', 'कट', 'ऑफ', 'फोटो', 'हस्ताक्षर', 'साइज', 'नियम', 'आयु', 'छूट', 'सिलेबस', 'नवीनतम'
+  ]);
+
+  function matchCatalogExams(rawQuery) {
+    const q = String(rawQuery || '').toLowerCase();
+    const cleanQ = q.replace(/[^a-z0-9\u0900-\u097f]+/g, ' ').trim();
+    const tokens = cleanQ.split(/\s+/).filter(function (tok) {
+      return tok.length >= 2 && !EXAM_STOP_WORDS.has(tok);
+    });
+
+    const specificRules = [
+      { re: /\brrb\s*ntpc\b|\bntpc\b/, match: function (n) { return n.startsWith('rrb ntpc'); } },
+      { re: /\brrb\s*group\s*d\b|\bgroup\s*d\b/, match: function (n) { return n.startsWith('rrb group d'); } },
+      { re: /\brrb\s*alp\b|\balp\b|\btechnician\b/, match: function (n) { return n.startsWith('rrb alp'); } },
+      { re: /\brrb\s*je\b|\brrb\s*sse\b/, match: function (n) { return n.startsWith('rrb je'); } },
+      { re: /\bssc\s*cgl\b|\bcgl\b/, match: function (n) { return n.startsWith('ssc cgl'); } },
+      { re: /\bssc\s*chsl\b|\bchsl\b/, match: function (n) { return n.startsWith('ssc chsl'); } },
+      { re: /\bssc\s*mts\b|\bmts\b/, match: function (n) { return n.startsWith('ssc mts'); } },
+      { re: /\bssc\s*gd\b|\bgd\b/, match: function (n) { return n.startsWith('ssc gd'); } },
+      { re: /\bssc\s*cpo\b|\bcpo\b/, match: function (n) { return n.startsWith('ssc cpo'); } },
+      { re: /\bibps\s*po\b/, match: function (n) { return n.startsWith('ibps po'); } },
+      { re: /\bibps\s*clerk\b/, match: function (n) { return n.startsWith('ibps clerk'); } },
+      { re: /\bibps\s*rrb\b/, match: function (n) { return n.startsWith('ibps rrb'); } },
+      { re: /\bibps\s*so\b/, match: function (n) { return n.startsWith('ibps so'); } },
+      { re: /\bsbi\b/, match: function (n) { return n.startsWith('sbi'); } },
+      { re: /\brbi\b/, match: function (n) { return n.startsWith('rbi'); } },
+      { re: /\bupsc\s*(cse|ias|ips)\b|\bias\b|\bips\b/, match: function (n) { return n.startsWith('upsc civil services'); } },
+      { re: /\bnda\b/, match: function (n) { return n.includes('nda'); } },
+      { re: /\bcds\b/, match: function (n) { return n.includes('cds'); } },
+      { re: /\bcapf\b/, match: function (n) { return n.includes('capf'); } },
+      { re: /\bneet\b/, match: function (n) { return n.startsWith('neet'); } },
+      { re: /\bjee\b/, match: function (n) { return n.startsWith('jee'); } },
+      { re: /\bcuet\b/, match: function (n) { return n.startsWith('cuet'); } },
+      { re: /\bugc\s*net\b/, match: function (n) { return n.startsWith('ugc net'); } },
+      { re: /\bctet\b/, match: function (n) { return n.includes('ctet'); } },
+      { re: /\bbpsc\s*tre\b|\bbihar\s*teacher\b/, match: function (n) { return n.startsWith('bpsc tre'); } },
+      { re: /\bbpsc\b/, match: function (n) { return n.startsWith('bpsc (bihar)'); } },
+      { re: /\bbssc\b/, match: function (n) { return n.startsWith('bssc'); } },
+      { re: /\bbihar\s*police\b|\bcsbc\b|\bbpssc\b/, match: function (n) { return n.startsWith('bihar police'); } },
+      { re: /\buppsc\b/, match: function (n) { return n.startsWith('uppsc'); } },
+      { re: /\bupsssc\b|\bpet\b/, match: function (n) { return n.startsWith('upsssc'); } },
+      { re: /\bup\s*police\b|\bupprpb\b/, match: function (n) { return n.startsWith('up police'); } },
+      { re: /\bjpsc\b/, match: function (n) { return n.startsWith('jpsc'); } },
+      { re: /\bjssc\b/, match: function (n) { return n.startsWith('jssc'); } },
+      { re: /\bmppsc\b/, match: function (n) { return n.startsWith('mppsc'); } },
+      { re: /\bmpesb\b|\bvyapam\b|\bmp\s*patwari\b/, match: function (n) { return n.startsWith('mpesb'); } },
+      { re: /\brpsc\b|\bras\b/, match: function (n) { return n.startsWith('rpsc'); } },
+      { re: /\brssb\b|\brsmssb\b|\breet\b/, match: function (n) { return n.startsWith('rssb'); } },
+      { re: /\bhpsc\b|\bhcs\b/, match: function (n) { return n.startsWith('hpsc'); } },
+      { re: /\bhssc\b/, match: function (n) { return n.startsWith('hssc'); } },
+      { re: /\bppsc\b/, match: function (n) { return n.startsWith('ppsc'); } },
+      { re: /\bpsssb\b|\bpunjab\s*police\b/, match: function (n) { return n.startsWith('psssb'); } },
+      { re: /\bagniveer\b|\bindian\s*army\b/, match: function (n) { return n.includes('agniveer'); } },
+    ];
+
+    const scored = [];
+    state.exams.forEach(function (exam) {
+      const nameL = (exam.n || '').toLowerCase();
+      const nameHi = (exam.n_hi || '').toLowerCase();
+      const orgL = (exam.o || '').toLowerCase();
+      const catL = (exam.c || '').toLowerCase();
+      const aliasL = (DATA.CATEGORY_ALIASES[exam.c] || '').toLowerCase();
+      let score = 0;
+
+      specificRules.forEach(function (rule) {
+        if (rule.re.test(q) && rule.match(nameL)) {
+          score += 220;
+        }
+      });
+
+      if (hasWholeWord(cleanQ, 'ssc') && nameL.indexOf('ssc ') === 0 && !/\bssc\s*(cgl|chsl|mts|gd|cpo)\b/.test(q)) {
+        score += 110 + (nameL.startsWith('ssc cgl') ? 25 : 0);
+      }
+      if (hasWholeWord(cleanQ, 'ibps') && nameL.indexOf('ibps ') === 0 && !/\bibps\s*(po|clerk|rrb|so)\b/.test(q)) {
+        score += 110 + (nameL.startsWith('ibps po') ? 25 : 0);
+      }
+      if (hasWholeWord(cleanQ, 'upsc') && nameL.indexOf('upsc ') === 0 && !/\bupsc\s*(cse|ias|ips|nda|cds|capf)\b/.test(q)) {
+        score += 110 + (nameL.startsWith('upsc civil') ? 25 : 0);
+      }
+      if (hasWholeWord(cleanQ, 'rrb') && nameL.indexOf('rrb ') === 0 && !/\brrb\s*(ntpc|group|alp|je)\b/.test(q)) {
+        score += 110 + (nameL.startsWith('rrb ntpc') ? 25 : 0);
+      }
+
+      tokens.forEach(function (tok) {
+        if (hasWholeWord(nameL, tok) || (nameHi && hasWholeWord(nameHi, tok))) {
+          score += 40;
+        } else if (hasWholeWord(orgL, tok)) {
+          score += 18;
+        } else if (hasWholeWord(catL, tok)) {
+          score += 12;
+        } else if (hasWholeWord(aliasL, tok)) {
+          score += 5;
+        }
+      });
+
+      if (score > 0) {
+        scored.push({ exam: exam, score: score });
+      }
+    });
+
+    scored.sort(function (a, b) { return b.score - a.score; });
+    if (scored.length === 0) return [];
+
+    const topScore = scored[0].score;
+    if (topScore >= 200) {
+      return scored.filter(function (item) { return item.score >= 200; }).slice(0, 4).map(function (i) { return i.exam; });
+    }
+    if (topScore >= 100) {
+      const topPool = scored.filter(function (item) { return item.score >= 100; });
+      const seenCat = {};
+      const diverse = [];
+      topPool.forEach(function (item) {
+        if (!seenCat[item.exam.c]) {
+          seenCat[item.exam.c] = true;
+          diverse.push(item.exam);
+        }
+      });
+      topPool.forEach(function (item) {
+        if (diverse.indexOf(item.exam) < 0 && diverse.length < 4) diverse.push(item.exam);
+      });
+      return diverse.slice(0, 4);
+    }
+    return scored.filter(function (item) { return item.score >= Math.max(12, topScore * 0.65); }).slice(0, 4).map(function (i) { return i.exam; });
+  }
+
+  function buildLocalVerifiedFallback(query, noticeMsg, lang, roleMode) {
+    const q = String(query || '').toLowerCase();
+    const hi = lang === 'hi';
+    const matched = matchCatalogExams(query);
+
+    const wantsStrategy = /\b(30[- ]?day|strategy|plan|revision|prepare|preparation|timetable|schedule|study)\b|रणनीति|तैयारी|योजना|रिवीजन/.test(q) || roleMode === 'strategy_coach';
+    const wantsSyllabus = /\b(syllabus|pattern|tier|subject|subjects|weightage|marking|paper)\b|सिलेबस|पाठ्यक्रम|पैटर्न/.test(q) || roleMode === 'strategy_coach';
+    const wantsCutoff = /\b(cut[- ]?off|cutoffs|safe\s*score|qualifying|marks|merit)\b|कट-?ऑफ|स्कोर|अंक/.test(q) || roleMode === 'strategy_coach';
+    const wantsDocs = /\b(photo|sign|signature|kb|px|pixel|pdf|thumb|declaration|postcard|form|upload|size|dimension|document)\b|फोटो|हस्ताक्षर|साइज|पीडीएफ|दस्तावेज/.test(q) || roleMode === 'quick_tutor';
+    const wantsAge = /\b(age|eligibility|relaxation|obc|sc|st|ews|pwbd|dob|birth)\b|आयु|छूट|योग्यता|पात्रता/.test(q);
 
     const sources = [];
     const lines = [];
@@ -6539,49 +7075,210 @@
     if (matched.length > 0) {
       lines.push(
         '',
-        lang === 'hi'
-          ? '**ExamSetu & Toolkit के सत्यापित डेटाबेस से उपलब्ध जानकारी:**'
-          : '**Verified Exam Details from ExamSetu & Toolkit Catalog:**'
+        hi
+          ? '**ExamSetu & Toolkit सत्यापित परीक्षा विवरण (' + DATA.VERIFIED_DATE + '):**'
+          : '**Verified Exam Details from ExamSetu & Toolkit Catalog (' + DATA.VERIFIED_DATE + '):**'
       );
-      matched.forEach(function (ex) {
-        const name = lang === 'hi' && ex.n_hi ? ex.n_hi : ex.n;
-        const status = lang === 'hi' && ex.st_hi ? ex.st_hi : ex.st;
-        lines.push('- **' + name + '** (' + ex.o + ') — ' + status);
+
+      matched.forEach(function (ex, idx) {
+        const name = hi && ex.n_hi ? ex.n_hi : ex.n;
+        const status = hi && ex.st_hi ? ex.st_hi : ex.st;
+        const pb = getPlaybookForExam(ex);
+        const docSpecs = DATA.EXAM_DOCS_DATA[pb.docBoard] || [];
+
+        if (idx > 0) lines.push('', '---');
+        lines.push('### ' + name + ' (' + ex.o + ')');
+        lines.push('- **' + (hi ? 'ताजा स्थिति' : 'Current Status') + ':** ' + status);
+
         if (ex.d && ex.d.dates && ex.d.dates.length > 0) {
-          const dRows = lang === 'hi' && ex.d.dates_hi ? ex.d.dates_hi : ex.d.dates;
-          dRows.slice(0, 3).forEach(function (row) {
+          const dRows = hi && ex.d.dates_hi ? ex.d.dates_hi : ex.d.dates;
+          dRows.slice(0, 4).forEach(function (row) {
             lines.push('  - ' + row[0] + ': ' + row[1]);
           });
         }
+
+        if (wantsSyllabus) {
+          lines.push('', '**' + (hi ? 'परीक्षा पैटर्न व सिलेबस:' : 'Exam Pattern & Syllabus Breakdown:') + '**');
+          (hi ? pb.patternHi : pb.patternEn).forEach(function (pLine) {
+            lines.push('- ' + pLine);
+          });
+        }
+
+        if (wantsCutoff) {
+          lines.push('', '**' + (hi ? 'अपेक्षित कट-ऑफ व सेफ स्कोर:' : 'Expected Cutoff & Safe Score:') + '**');
+          lines.push('- ' + (hi ? pb.cutoffHi : pb.cutoffEn));
+        }
+
+        if (wantsStrategy) {
+          lines.push('', '**' + (hi ? '30-दिन की लक्षित तैयारी रणनीति:' : 'Tailored 30-Day Revision Strategy:') + '**');
+          (hi ? pb.strategyHi : pb.strategyEn).forEach(function (sLine) {
+            lines.push('- ' + sLine);
+          });
+        }
+
+        if (wantsDocs || (!wantsStrategy && !wantsCutoff && !wantsSyllabus && idx === 0)) {
+          lines.push('', '**' + (hi ? 'फोटो, हस्ताक्षर व दस्तावेज नियम (' + pb.docBoard + ' मानक):' : 'Photo, Signature & Form Rules (' + pb.docBoard + ' Preset):') + '**');
+          docSpecs.forEach(function (spec) {
+            lines.push('- ' + (hi && spec.label_hi ? spec.label_hi : spec.label));
+          });
+          lines.push('- ' + (hi ? pb.docNoteHi : pb.docNoteEn));
+        }
+
         if (ex.u) sources.push({ title: ex.n + ' Official Portal', uri: ex.u });
         if (ex.a && ex.a !== ex.u) sources.push({ title: ex.n + ' Admit Card', uri: ex.a });
         if (ex.r && ex.r !== ex.u) sources.push({ title: ex.n + ' Result', uri: ex.r });
         if (ex.f && ex.f !== ex.u) sources.push({ title: ex.n + ' Notification', uri: ex.f });
       });
-    } else if (q.includes('photo') || q.includes('sign') || q.includes('kb') || q.includes('pdf') || q.includes('फोटो') || q.includes('हस्ताक्षर')) {
+
+      if (wantsAge) {
+        lines.push(
+          '',
+          hi
+            ? '**आयु सीमा व श्रेणी छूट (सरकारी मानदंड):** सामान्य/EWS +0 वर्ष | OBC (NCL) +3 वर्ष | SC/ST +5 वर्ष | PwBD +10/+13/+15 वर्ष। सटीक कट-ऑफ जांच हेतु नीचे **Age & Eligibility Calculator** का उपयोग करें।'
+            : '**Age Limit & Category Relaxation:** General/EWS +0 yrs | OBC (NCL) +3 yrs | SC/ST +5 yrs | PwBD +10/+13/+15 yrs. Verify exact DOB eligibility in the **Age Calculator** below.'
+        );
+      }
+    } else if (wantsDocs) {
       lines.push(
         '',
-        lang === 'hi'
-          ? '**फोटो व हस्ताक्षर मानक (स्थानीय गाइड):**\n- **SSC**: फोटो (20–50 KB, 200×230 px) व हस्ताक्षर (10–20 KB JPEG)।\n- **IBPS / SBI**: फोटो (20–50 KB, 200×230 px), हस्ताक्षर (10–20 KB), बायां अंगूठा व हस्तलिखित घोषणा।\n- नीचे पेज पर **Photo & Sign Resizer** और **Photo to PDF** से 100% ऑफलाइन तैयार करें।'
-          : '**Standard Photo & Signature Specs (Local Guide):**\n- **SSC**: Photograph (20–50 KB, 200x230 px) & Signature (10–20 KB JPEG).\n- **IBPS / SBI**: Photograph (20–50 KB, 200x230 px), Signature (10–20 KB), Left Thumb & Handwritten Declaration.\n- Use the **Photo & Sign Resizer** and **Photo to PDF** tools below on this page 100% offline.'
+        hi
+          ? '**फोटो, हस्ताक्षर व दस्तावेज मानक (स्थानीय टूलकिट गाइड):**'
+          : '**Photo, Signature & Document Specs (Local Toolkit Guide):**'
       );
-    } else if (q.includes('age') || q.includes('relax') || q.includes('obc') || q.includes('sc') || q.includes('ews') || q.includes('आयु')) {
+      ['SSC', 'IBPS', 'RRB', 'UPSC', 'NTA', 'BPSC'].forEach(function (board) {
+        const specs = DATA.EXAM_DOCS_DATA[board] || [];
+        const summary = specs.map(function (s) { return hi && s.label_hi ? s.label_hi : s.label; }).join(' | ');
+        lines.push('- **' + board + ':** ' + summary);
+      });
       lines.push(
         '',
-        lang === 'hi'
+        hi
+          ? 'नीचे पेज पर मौजूद **Photo & Sign Resizer** और **Photo to PDF (<300 KB)** टूल्स से 100% ऑफलाइन और सुरक्षित तरीके से फाइलें तैयार करें।'
+          : 'Use the **Photo & Sign Resizer** and **Photo to PDF (<300 KB)** tools on this page 100% offline with exact presets.'
+      );
+    } else if (wantsAge) {
+      lines.push(
+        '',
+        hi
           ? '**आयु सीमा व आरक्षण छूट नियम:**\n- सामान्य / EWS: 0 वर्ष अतिरिक्त छूट\n- OBC (NCL): +3 वर्ष अतिरिक्त छूट\n- SC / ST: +5 वर्ष अतिरिक्त छूट\n- दिव्यांग (PwBD): +10 वर्ष (सामान्य), +13 वर्ष (OBC), +15 वर्ष (SC/ST)\n- सटीक गणना के लिए नीचे पेज पर **Age & Eligibility Calculator** का उपयोग करें।'
           : '**Age Limit & Category Relaxation Rules:**\n- General / EWS: +0 Years\n- OBC (Non-Creamy Layer): +3 Years\n- SC / ST: +5 Years\n- PwBD: +10 Years (Gen), +13 Years (OBC), +15 Years (SC/ST)\n- Use the **Age & Eligibility Calculator** below to verify exact cutoff dates.'
       );
     } else {
       lines.push(
         '',
-        lang === 'hi'
-          ? 'आप पेज के मुख्य फ़िल्टर से सभी ' + state.exams.length + ' केंद्रीय व राज्य स्तरीय परीक्षाओं की ताजा तिथियां, एडमिट कार्ड, उत्तर कुंजी, रिजल्ट और फोटो/आयु/PDF टूल्स का उपयोग बिना इंटरनेट सीमा के कर सकते हैं।'
-          : 'You can browse all ' + state.exams.length + ' Central & State exams, live dates, admit cards, answer keys, results, and use the offline Photo Resizer, Age Calculator & PDF Compressor right on this page.'
+        hi
+          ? 'कृपया किसी विशिष्ट परीक्षा का नाम लिखें (जैसे **RRB NTPC**, **SSC CGL**, **SSC MTS**, **SSC CPO**, **IBPS PO**, **BPSC**, **BSSC**, **NEET**, **CUET**, **UPSC**)। आप किसी भी परीक्षा के लिए **30-दिन की रणनीति, सिलेबस, अपेक्षित कट-ऑफ या फोटो/हस्ताक्षर नियम** पूछ सकते हैं।'
+          : 'Ask about any specific exam such as **RRB NTPC**, **SSC CGL**, **SSC MTS**, **SSC CPO**, **IBPS PO/Clerk**, **BPSC**, **BSSC**, **NEET**, **CUET**, or **UPSC** for tailored **30-day revision plans, syllabus breakdowns, expected cutoffs, and photo/signature form rules**.'
       );
     }
 
-    return { text: lines.join('\n'), sources: sources.slice(0, 6) };
+    const seenUri = {};
+    const dedupSources = sources.filter(function (s) {
+      if (!s.uri || seenUri[s.uri]) return false;
+      seenUri[s.uri] = true;
+      return true;
+    });
+
+    return { text: lines.join('\n'), sources: dedupSources.slice(0, 6) };
+  }
+
+  function callBrowserGeminiApi(apiKey, apiMessages, roleMode, lang) {
+    const cleanKey = String(apiKey || '').trim();
+    const isHindi = lang === 'hi';
+    const docSummary = Object.keys(DATA.EXAM_DOCS_DATA).map(function (k) {
+      return k + ': ' + DATA.EXAM_DOCS_DATA[k].map(function (d) { return d.label; }).join(', ');
+    }).join(' | ');
+
+    let roleDirective = '';
+    if (roleMode === 'strategy_coach') {
+      roleDirective = 'Role: Study Strategy & Syllabus Coach. Provide structured 30-day revision plans, subject weightage, and realistic expected cutoffs.';
+    } else if (roleMode === 'quick_tutor') {
+      roleDirective = 'Role: Fast Exam & Form Helper. Give concise, bullet-point answers on dates, age eligibility, and exact Photo/Signature KB specs.';
+    } else {
+      roleDirective = 'Role: Live Exam Search Advisor. Provide accurate exam updates, admit card, answer key, result status and key official timelines.';
+    }
+
+    const systemInstructionText =
+      'You are the ExamSetu & Toolkit AI Assistant for Indian Government & Entrance Exams (UPSC, SSC, Banking/IBPS/SBI, Railways/RRB, BPSC, BSSC, UPPSC, NTA NEET/JEE/CUET, State PSCs). ' +
+      'Verified portal date reference: ' + DATA.VERIFIED_DATE + '. ' +
+      roleDirective + ' ' +
+      'Verified local Student Toolkit form document specs: ' + docSummary + '. ' +
+      (isHindi
+        ? 'Respond clearly in Hindi (Devanagari) with concise markdown headings and bullet points.'
+        : 'Respond clearly in English with concise markdown headings and bullet points.') +
+      ' Always remind students to verify final dates on official commission portals.';
+
+    const contents = apiMessages.slice(-10).map(function (m) {
+      return {
+        role: m.role === 'model' ? 'model' : 'user',
+        parts: [{ text: String(m.text || '') }],
+      };
+    });
+
+    function runAttempt(modelName, useSearchTool) {
+      const endpoint =
+        'https://generativelanguage.googleapis.com/v1beta/models/' +
+        encodeURIComponent(modelName) +
+        ':generateContent?key=' +
+        encodeURIComponent(cleanKey);
+
+      const payload = {
+        systemInstruction: { parts: [{ text: systemInstructionText }] },
+        contents: contents,
+        generationConfig: {
+          temperature: roleMode === 'search_advisor' ? 0.25 : 0.45,
+          maxOutputTokens: 1400,
+        },
+      };
+      if (useSearchTool) {
+        payload.tools = [{ google_search: {} }];
+      }
+
+      return fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          if (!res.ok) {
+            const errMsg = (data && data.error && data.error.message) || ('HTTP ' + res.status);
+            const err = new Error(errMsg);
+            err.status = res.status;
+            throw err;
+          }
+          const cand = data && data.candidates && data.candidates[0];
+          const parts = cand && cand.content && cand.content.parts ? cand.content.parts : [];
+          const text = parts.map(function (p) { return p.text || ''; }).join('\n').trim();
+          if (!text) throw new Error('Empty AI response');
+
+          const sources = [];
+          const seen = {};
+          const chunks = (cand && cand.groundingMetadata && cand.groundingMetadata.groundingChunks) || [];
+          chunks.forEach(function (ch) {
+            if (ch && ch.web && ch.web.uri && !seen[ch.web.uri]) {
+              seen[ch.web.uri] = true;
+              sources.push({ title: ch.web.title || 'Web Source', uri: ch.web.uri });
+            }
+          });
+          return {
+            reply: text,
+            sources: sources.slice(0, 6),
+            modelUsed: modelName + (useSearchTool ? ' (Browser Key + Search)' : ' (Browser Key)'),
+          };
+        });
+      });
+    }
+
+    const trySearch = roleMode !== 'quick_tutor';
+    return runAttempt('gemini-2.5-flash', trySearch).catch(function (err) {
+      if (trySearch && err && err.status === 400) {
+        return runAttempt('gemini-2.5-flash', false);
+      }
+      if (err && (err.status === 404 || err.status === 429 || err.status === 503)) {
+        return runAttempt('gemini-2.0-flash', false);
+      }
+      throw err;
+    });
   }
 
   function renderFormattedLine(line) {
@@ -6641,7 +7338,7 @@
         icon('bot', 'w-4 h-4 shrink-0') +
         '<span>' + esc(hi ? 'नमस्ते! ExamSetu & Toolkit AI में आपका स्वागत है' : 'Welcome to ExamSetu & Toolkit AI Assistant') + '</span></div>' +
         '<p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">' +
-        esc(hi ? 'सरकारी परीक्षाओं की ताजा तिथियां, एडमिट कार्ड, उत्तर कुंजी, कट-ऑफ या फोटो/PDF फॉर्म नियमों के बारे में कोई भी प्रश्न पूछें।' : 'Ask questions about live government exam dates, admit cards, answer keys, cutoffs, study plans, or photo/signature KB rules.') +
+        esc(hi ? 'सरकारी परीक्षाओं की ताजा तिथियां, एडमिट कार्ड, उत्तर कुंजी, 30-दिन रणनीति, कट-ऑफ या फोटो/PDF फॉर्म नियमों के बारे में कोई भी प्रश्न पूछें।' : 'Ask questions about live government exam dates, admit cards, answer keys, 30-day study plans, expected cutoffs, or photo/signature KB rules.') +
         '</p></div>' +
         '<div><div class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">' +
         esc(hi ? 'त्वरित उदाहरण प्रश्न:' : 'Try asking:') + '</div>' +
@@ -6714,6 +7411,8 @@
 
     const hi = state.language === 'hi';
     const activeRoleMeta = CHAT_ROLES.find(function (r) { return r.id === state.chatRoleMode; }) || CHAT_ROLES[0];
+    const hasPersonalKey = Boolean(state.geminiApiKey && state.geminiApiKey.trim());
+    const keyDraftVal = state.keyInputDraft || state.geminiApiKey || '';
 
     mount.innerHTML =
       '<div data-backdrop="chat" class="fixed inset-0 z-50 bg-black/65 flex items-end sm:items-center justify-center p-0 sm:p-4">' +
@@ -6723,10 +7422,17 @@
       '<div class="flex items-center gap-2.5">' +
       '<div class="w-9 h-9 rounded-xl bg-amber-500 text-rose-950 flex items-center justify-center shadow-xs shrink-0">' + icon('sparkles', 'w-5 h-5') + '</div>' +
       '<div>' +
-      '<h2 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2"><span>ExamSetu &amp; Toolkit AI</span>' +
-      '<span id="chat-role-badge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30">' + esc(activeRoleMeta.badge) + '</span></h2>' +
+      '<h2 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2 flex-wrap"><span>ExamSetu &amp; Toolkit AI</span>' +
+      '<span id="chat-role-badge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30">' + esc(activeRoleMeta.badge) + '</span>' +
+      (hasPersonalKey ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-200 border border-emerald-500/30">' + esc(hi ? 'लाइव कुंजी सक्रिय' : 'Key Active') + '</span>' : '') +
+      '</h2>' +
       '<p id="chat-role-desc" class="text-[11px] sm:text-xs text-rose-200/90">' + esc(hi ? activeRoleMeta.descHi : activeRoleMeta.descEn) + '</p></div></div>' +
       '<div class="flex items-center gap-1.5">' +
+      '<button type="button" id="chat-key-btn" data-action="toggle-key-panel" class="p-2 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ' +
+      (state.isKeyPanelOpen ? 'bg-amber-500 text-rose-950' : hasPersonalKey ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 hover:bg-white/20' : 'bg-white/10 hover:bg-white/20 text-amber-200 hover:text-white') + '" title="' + esc(hi ? 'वैकल्पिक Gemini API कुंजी सेटिंग्स (ब्राउज़र में सुरक्षित)' : 'Optional Gemini API Key Settings (saved locally in browser)') + '" aria-label="Gemini API Key Settings">' +
+      icon('key', 'w-4 h-4') +
+      (hasPersonalKey ? '<span class="w-2 h-2 rounded-full bg-emerald-500"></span>' : '') +
+      '</button>' +
       '<button type="button" id="chat-clear-btn" data-action="chat-clear" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-rose-100 hover:text-white transition-colors cursor-pointer ' + (state.chatMessages.length ? '' : 'hidden') + '" title="' + esc(hi ? 'चैट साफ़ करें' : 'Clear conversation') + '">' + icon('trash2', 'w-4 h-4') + '</button>' +
       '<button type="button" data-action="close-chat" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer" aria-label="Close AI Assistant">' + icon('x', 'w-5 h-5') + '</button>' +
       '</div></div>' +
@@ -6737,7 +7443,24 @@
           (isSel ? 'bg-amber-500 text-rose-950 shadow-xs' : 'bg-white/10 text-rose-100 hover:bg-white/20') + '">' +
           icon(opt.icon, 'w-3.5 h-3.5') + '<span>' + esc(hi ? opt.labelHi : opt.labelEn) + '</span></button>';
       }).join('') +
-      '</div></div>' +
+      '</div>' +
+      (state.isKeyPanelOpen
+        ? '<div id="chat-key-panel" class="mt-3 pt-3 border-t border-amber-500/30 space-y-2 text-xs">' +
+          '<div class="flex items-center justify-between gap-2 flex-wrap">' +
+          '<span class="font-bold text-amber-300">' + esc(hi ? 'वैकल्पिक Gemini API कुंजी (केवल इस ब्राउज़र के localStorage में सुरक्षित)' : 'Optional Gemini API Key (Stored only in this browser\'s localStorage)') + '</span>' +
+          '<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="text-[11px] text-amber-200 underline hover:text-white">' + esc(hi ? 'मुफ़्त कुंजी प्राप्त करें' : 'Get free Gemini key') + '</a>' +
+          '</div>' +
+          '<div class="flex items-center gap-1.5">' +
+          '<input id="chat-key-input" type="' + (state.showKeyPlain ? 'text' : 'password') + '" autocomplete="off" spellcheck="false" value="' + esc(keyDraftVal) + '" placeholder="' + esc(hi ? 'अपनी Gemini API कुंजी यहाँ पेस्ट करें (AIza...)' : 'Paste your Gemini API key here (optional)...') + '" class="flex-1 min-w-0 rounded-lg border border-amber-500/30 bg-slate-900 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500" />' +
+          '<button type="button" data-action="toggle-key-vis" class="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-rose-100 cursor-pointer shrink-0" title="' + esc(hi ? 'दिखाएं / छिपाएं' : 'Show / Hide key') + '">' + icon(state.showKeyPlain ? 'eyeOff' : 'eye', 'w-4 h-4') + '</button>' +
+          '<button type="button" data-action="save-gemini-key" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-rose-950 font-bold cursor-pointer shrink-0">' + esc(hi ? 'सहेजें' : 'Save') + '</button>' +
+          (hasPersonalKey ? '<button type="button" data-action="clear-gemini-key" class="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-rose-200 hover:text-white font-bold cursor-pointer shrink-0">' + esc(hi ? 'हटाएं' : 'Remove') + '</button>' : '') +
+          '</div>' +
+          '<p class="text-[11px] text-rose-200/90">' +
+          esc(state.keyPanelMsg || (hi ? 'कोई निजी कुंजी कोड में सेव नहीं की जाती। बिना कुंजी के भी ऑफलाइन सत्यापित कैटलॉग 100% कार्य करता है।' : 'No private key is exposed in public code. Without a key, the upgraded Offline Verified Catalog handles all exam queries seamlessly.')) +
+          '</p></div>'
+        : '') +
+      '</div>' +
       '<div id="chat-thread-body" class="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-4 bg-slate-50/70 dark:bg-slate-950/60"></div>' +
       '<form id="chat-form" class="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">' +
       '<div class="flex items-end gap-2">' +
@@ -6748,6 +7471,25 @@
       '</form></div></div>';
 
     renderChatThreadOnly();
+
+    const keyInp = document.getElementById('chat-key-input');
+    if (keyInp) {
+      keyInp.addEventListener('input', function (e) {
+        state.keyInputDraft = e.target.value;
+      });
+      keyInp.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const val = (keyInp.value || '').trim();
+          state.geminiApiKey = saveGeminiKeyToStorage(val);
+          state.keyInputDraft = state.geminiApiKey;
+          state.keyPanelMsg = state.geminiApiKey
+            ? (hi ? 'कुंजी आपके ब्राउज़र में सुरक्षित सहेजी गई! अब लाइव Gemini AI उत्तर सक्रिय हैं।' : 'API key saved locally in your browser! Live Gemini AI answers are now enabled.')
+            : (hi ? 'कुंजी हटाई गई। ऑफलाइन सत्यापित कैटलॉग सक्रिय है।' : 'Key cleared. Using Offline Verified Catalog.');
+          renderChatModal();
+        }
+      });
+    }
 
     const inp = document.getElementById('chat-input');
     const form = document.getElementById('chat-form');
@@ -6769,7 +7511,9 @@
           sendChatMessage(state.chatInput);
         }
       });
-      setTimeout(function () { inp.focus(); }, 80);
+      if (!state.isKeyPanelOpen) {
+        setTimeout(function () { inp.focus(); }, 80);
+      }
     }
     if (form) {
       form.addEventListener('submit', function (e) {
@@ -6777,6 +7521,18 @@
         sendChatMessage(state.chatInput);
       });
     }
+  }
+
+  function pushLocalFallbackMessage(trimmed, noticeMsg, fallbackNote, activeRole) {
+    const fallback = buildLocalVerifiedFallback(trimmed, noticeMsg, state.language, activeRole);
+    state.chatMessages.push({
+      id: 'loc_' + Date.now(),
+      role: 'model',
+      text: fallback.text,
+      sources: fallback.sources,
+      modelUsed: 'Local Verified Catalog',
+      fallbackNote: fallbackNote || undefined,
+    });
   }
 
   function sendChatMessage(rawText, overrideRole) {
@@ -6798,33 +7554,51 @@
     const sendBtn = document.getElementById('chat-send-btn');
     if (sendBtn) sendBtn.disabled = true;
 
+    const apiMessages = state.chatMessages
+      .filter(function (m) { return !m.isError; })
+      .map(function (m) { return { role: m.role, text: m.text }; });
+
+    const personalKey = (state.geminiApiKey || '').trim();
     const isStaticHost =
       window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
 
     if (isStaticHost) {
+      if (personalKey) {
+        callBrowserGeminiApi(personalKey, apiMessages, activeRole, state.language)
+          .then(function (out) {
+            state.chatMessages.push({
+              id: 'gm_' + Date.now(),
+              role: 'model',
+              text: out.reply,
+              sources: out.sources || [],
+              modelUsed: out.modelUsed,
+            });
+          })
+          .catch(function (err) {
+            const note = hi
+              ? 'लाइव Gemini कुंजी से उत्तर नहीं मिल सका (' + (err && err.message ? err.message : 'Network/Quota') + ') — सत्यापित ऑफलाइन कैटलॉग से उत्तर दिखाया जा रहा है।'
+              : 'Live Gemini key call could not complete (' + (err && err.message ? err.message : 'Network/Quota') + ') — showing tailored answer from Local Verified Catalog.';
+            pushLocalFallbackMessage(trimmed, '', note, activeRole);
+          })
+          .finally(function () {
+            state.chatLoading = false;
+            renderChatThreadOnly();
+            if (sendBtn) sendBtn.disabled = !state.chatInput.trim();
+          });
+        return;
+      }
+
       setTimeout(function () {
-        const fallback = buildLocalVerifiedFallback(
-          trimmed,
-          hi ? '**ऑफलाइन सत्यापित कैटलॉग सहायक:**' : '**Verified Local Catalog Assistant:**',
-          state.language
-        );
-        state.chatMessages.push({
-          id: 'loc_' + Date.now(),
-          role: 'model',
-          text: fallback.text,
-          sources: fallback.sources,
-          modelUsed: 'Local Verified Catalog',
-        });
+        const offlineNote = hi
+          ? 'ऑफलाइन सत्यापित कैटलॉग मोड — लाइव AI वेब सर्च के लिए ऊपर Key आइकन में अपनी वैकल्पिक Gemini कुंजी जोड़ें।'
+          : 'Offline Verified Catalog Mode — Optionally add your own Gemini API key via the Key icon above for live AI web search.';
+        pushLocalFallbackMessage(trimmed, '', offlineNote, activeRole);
         state.chatLoading = false;
         renderChatThreadOnly();
         if (sendBtn) sendBtn.disabled = !state.chatInput.trim();
-      }, 180);
+      }, 150);
       return;
     }
-
-    const apiMessages = state.chatMessages
-      .filter(function (m) { return !m.isError; })
-      .map(function (m) { return { role: m.role, text: m.text }; });
 
     fetch('/api/chat', {
       method: 'POST',
@@ -6843,20 +7617,7 @@
       .then(function (out) {
         const res = out.res;
         const data = out.data;
-        if (!res.ok || !data || !data.reply) {
-          const fallback = buildLocalVerifiedFallback(
-            trimmed,
-            (data && data.error) || (hi ? '**स्थानीय सत्यापित डेटाबेस उत्तर:**' : '**Verified Local Catalog Response:**'),
-            state.language
-          );
-          state.chatMessages.push({
-            id: 'q_' + Date.now(),
-            role: 'model',
-            text: fallback.text,
-            sources: fallback.sources,
-            modelUsed: 'Local Verified Catalog',
-          });
-        } else {
+        if (res.ok && data && data.reply) {
           state.chatMessages.push({
             id: 'm_' + Date.now(),
             role: 'model',
@@ -6865,21 +7626,58 @@
             modelUsed: data.modelUsed,
             fallbackNote: data.fallbackNote,
           });
+          return null;
         }
+        if (personalKey) {
+          return callBrowserGeminiApi(personalKey, apiMessages, activeRole, state.language)
+            .then(function (browserOut) {
+              state.chatMessages.push({
+                id: 'gm_' + Date.now(),
+                role: 'model',
+                text: browserOut.reply,
+                sources: browserOut.sources || [],
+                modelUsed: browserOut.modelUsed,
+              });
+            })
+            .catch(function (err) {
+              pushLocalFallbackMessage(
+                trimmed,
+                '',
+                (err && err.message) || (data && data.error) || undefined,
+                activeRole
+              );
+            });
+        }
+        pushLocalFallbackMessage(
+          trimmed,
+          '',
+          (data && data.error) || (hi ? 'स्थानीय सत्यापित कैटलॉग से सटीक उत्तर:' : 'Tailored answer from Local Verified Catalog:'),
+          activeRole
+        );
+        return null;
       })
       .catch(function () {
-        const fallback = buildLocalVerifiedFallback(
+        if (personalKey) {
+          return callBrowserGeminiApi(personalKey, apiMessages, activeRole, state.language)
+            .then(function (browserOut) {
+              state.chatMessages.push({
+                id: 'gm_' + Date.now(),
+                role: 'model',
+                text: browserOut.reply,
+                sources: browserOut.sources || [],
+                modelUsed: browserOut.modelUsed,
+              });
+            })
+            .catch(function () {
+              pushLocalFallbackMessage(trimmed, '', undefined, activeRole);
+            });
+        }
+        pushLocalFallbackMessage(
           trimmed,
-          hi ? '**ऑफलाइन / स्थानीय डेटाबेस उत्तर:**' : '**Offline / Local Catalog Response:**',
-          state.language
+          '',
+          hi ? 'ऑफलाइन सत्यापित कैटलॉग से उत्तर:' : 'Offline Local Verified Catalog Response:',
+          activeRole
         );
-        state.chatMessages.push({
-          id: 'loc_' + Date.now(),
-          role: 'model',
-          text: fallback.text,
-          sources: fallback.sources,
-          modelUsed: 'Local Verified Catalog',
-        });
       })
       .finally(function () {
         state.chatLoading = false;
@@ -6957,8 +7755,42 @@
     if (action === 'open-sheet') { state.isSheetSyncOpen = true; renderSheetSyncModal(); return; }
     if (action === 'close-sheet') { state.isSheetSyncOpen = false; renderSheetSyncModal(); return; }
     if (action === 'open-chat') { state.isChatOpen = true; renderChatModal(); renderFloatingAiButton(); return; }
-    if (action === 'close-chat') { state.isChatOpen = false; renderChatModal(); renderFloatingAiButton(); return; }
+    if (action === 'close-chat') { state.isChatOpen = false; state.isKeyPanelOpen = false; state.keyPanelMsg = ''; renderChatModal(); renderFloatingAiButton(); return; }
     if (action === 'chat-clear') { state.chatMessages = []; renderChatThreadOnly(); return; }
+    if (action === 'toggle-key-panel') {
+      state.isKeyPanelOpen = !state.isKeyPanelOpen;
+      state.keyInputDraft = state.geminiApiKey || '';
+      state.keyPanelMsg = '';
+      renderChatModal();
+      return;
+    }
+    if (action === 'toggle-key-vis') {
+      const kInp = document.getElementById('chat-key-input');
+      if (kInp) state.keyInputDraft = kInp.value;
+      state.showKeyPlain = !state.showKeyPlain;
+      renderChatModal();
+      return;
+    }
+    if (action === 'save-gemini-key') {
+      const kInp = document.getElementById('chat-key-input');
+      const hi = state.language === 'hi';
+      const val = kInp ? kInp.value : state.keyInputDraft;
+      state.geminiApiKey = saveGeminiKeyToStorage(val);
+      state.keyInputDraft = state.geminiApiKey;
+      state.keyPanelMsg = state.geminiApiKey
+        ? (hi ? 'कुंजी आपके ब्राउज़र में सुरक्षित सहेजी गई! अब लाइव Gemini AI उत्तर सक्रिय हैं।' : 'API key saved locally in your browser! Live Gemini AI answers are now enabled.')
+        : (hi ? 'कुंजी हटाई गई। ऑफलाइन सत्यापित कैटलॉग सक्रिय है।' : 'Key cleared. Using Offline Verified Catalog.');
+      renderChatModal();
+      return;
+    }
+    if (action === 'clear-gemini-key') {
+      const hi = state.language === 'hi';
+      state.geminiApiKey = saveGeminiKeyToStorage('');
+      state.keyInputDraft = '';
+      state.keyPanelMsg = hi ? 'ब्राउज़र से API कुंजी हटाई गई। ऑफलाइन सत्यापित कैटलॉग सक्रिय है।' : 'API key removed from browser storage. Offline Verified Catalog is active.';
+      renderChatModal();
+      return;
+    }
     if (action === 'toggle-only-bookmarked') { state.onlyBookmarked = !state.onlyBookmarked; renderFiltersAndGrid(); return; }
     if (action === 'clear-filters') {
       state.searchTerm = '';

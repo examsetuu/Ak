@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ExamSetu – Every exam update. One trusted place.</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--blue:#0B3D91;--orange:#F57C00;--green:#1B7F3B;--bg:#FFFFFF;--bg2:#F5F7FA;--text:#1F2933;--muted:#5b6672;--line:#dde3ea;--card:#FFFFFF;--hd:#7B1E2B;--hd2:#4E0F1B;--maroon:#7B1E2B;--gold:#D4A017}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#10151c;--bg2:#171e27;--text:#e8edf2;--muted:#9aa7b4;--line:#2a3441;--card:#1b2430;--hd:#5A1523;--hd2:#3a0b15;--maroon:#e3a0ab;--gold:#E6B84A;--green:#34a853}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#10151c;--bg2:#171e27;--text:#e8edf2;--muted:#9aa7b4;--line:#2a3441;--card:#1b2430;--hd:#5A1523;--hd2:#3a0b15;--maroon:#e3a0ab;--gold:#E6B84A;--green:#34a853}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg2);color:var(--text);font-family:Inter,Roboto,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;line-height:1.45}
+header{background:linear-gradient(135deg,var(--hd),var(--hd2));color:#fff;padding:18px 16px 20px;border-bottom:4px solid var(--gold)}
+.wrap{max-width:960px;margin:0 auto}
+.logo{font-size:24px;font-weight:800;letter-spacing:.2px}.logo span{color:#F5C542}
+.tag{margin:2px 0 14px;font-size:14px;opacity:.9}
+.search{width:100%;padding:13px 14px;border-radius:10px;border:0;font-size:16px;background:#fff;color:#1F2933}
+main{padding:16px}
+h2{font-size:18px;margin:6px 0 4px;color:var(--maroon)}
+.sub{color:var(--muted);font-size:14px;margin:0 0 12px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:8px}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--text);padding:8px 14px;border-radius:999px;font-size:14px;cursor:pointer}
+.chip.on{background:var(--hd);border-color:var(--gold);color:#fff}
+.grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:560px){.grid{grid-template-columns:1fr 1fr}}
+@media(min-width:820px){.grid{grid-template-columns:1fr 1fr 1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:left;cursor:pointer;color:var(--text);font:inherit;display:block;width:100%;border-left:4px solid var(--gold)}
+.card:active,.card:hover{border-color:var(--gold);background:var(--bg2)}
+.card b{display:block;font-size:16px;color:var(--maroon)}
+.card small{color:var(--muted);font-size:13px;display:block}
+.badge{display:inline-block;margin-top:8px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.2px}
+.b-red{background:rgba(211,47,47,.14);color:#d32f2f;border:1px solid rgba(211,47,47,.35)}
+.b-orange{background:rgba(245,124,0,.15);color:#e65100;border:1px solid rgba(245,124,0,.4)}
+.b-green{background:rgba(27,127,59,.14);color:var(--green);border:1px solid rgba(27,127,59,.35)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .b-red{color:#ff8a80}:root:not([data-theme="light"]) .b-orange{color:#ffb74d}}
+:root[data-theme="dark"] .b-red{color:#ff8a80}:root[data-theme="dark"] .b-orange{color:#ffb74d}
+.empty{color:var(--muted);padding:20px 0}
+
+/* Separate Section on the Same Page for Student Form Tools */
+.tools-section{margin-top:32px;padding-top:22px;border-top:2px solid var(--line)}
+.tools-grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:760px){.tools-grid{grid-template-columns:1fr 1fr 1fr}}
+.tool-box{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:12px;padding:14px}
+.tool-box h3{margin:0 0 3px;font-size:16.5px;color:var(--maroon)}
+.tool-box .tmeta{font-size:12.5px;color:var(--muted);margin-bottom:10px}
+.fgrp{margin:8px 0}
+.fgrp label{display:block;font-size:12.5px;font-weight:600;margin-bottom:3px;color:var(--text)}
+.fgrp input,.fgrp select{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg2);color:var(--text);font-size:13.5px;font-family:inherit}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.preview-box{background:var(--bg2);border:1px dashed var(--gold);border-radius:10px;padding:10px;text-align:center;margin-top:10px}
+.preview-box img{max-width:100%;max-height:150px;border:1px solid var(--line);background:#fff}
+.res-badge{padding:10px;border-radius:8px;margin-top:10px;font-size:13.5px;font-weight:600;text-align:center}
+.res-ok{background:rgba(27,127,59,.14);color:var(--green);border:1px solid var(--green)}
+.res-no{background:rgba(198,40,40,.14);color:#d32f2f;border:1px solid #d32f2f}
+
+#sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:20}
+#sheet.open{display:flex}
+.panel{background:var(--bg);width:100%;max-width:720px;height:92%;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:90%;overflow:auto;border-top:4px solid var(--gold)}
+.panel h3{margin:0 0 2px;font-size:20px;color:var(--maroon)}
+.meta{color:var(--muted);font-size:13px;margin-bottom:14px}
+.sec{margin:16px 0}.sec h4{margin:0 0 6px;font-size:15px;color:var(--maroon);border-left:4px solid var(--gold);padding-left:8px}
+.sec p,.sec li{font-size:14px;margin:4px 0}.sec ol{padding-left:20px;margin:4px 0}
+table{width:100%;border-collapse:collapse;font-size:14px}td{border:1px solid var(--line);padding:7px 8px;vertical-align:top}td:first-child{background:var(--bg2);font-weight:600;width:42%}
+.note{background:var(--bg2);border:1px dashed var(--gold);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--muted)}
+.reqbox{background:var(--bg2);border-left:3px solid var(--maroon);border-radius:6px;padding:8px 10px;margin:8px 0 12px;font-size:13px}
+.reqbox b{color:var(--maroon);display:block;margin-bottom:4px;font-size:13.5px}
+.reqbox ul{margin:0;padding-left:18px}
+.reqbox li{margin:3px 0;font-size:13px}
+.btn{display:block;width:100%;padding:12px;margin:8px 0 0;border-radius:10px;text-align:center;text-decoration:none;font-size:15px;font-weight:600;border:0;color:#fff}
+.btn.off{background:var(--bg2);color:var(--muted);border:1px dashed var(--line);font-weight:500;font-size:14px}
+.btn.ok{background:var(--orange)}.btn.off2{background:var(--green)}.btn.pdf{background:var(--hd);border:2px solid var(--gold)}
+.close{background:none;border:1px solid var(--line);color:var(--text);width:100%;padding:11px;border-radius:10px;margin-top:6px;font-size:15px;cursor:pointer}
+button.btn{cursor:pointer;font-family:inherit}
+#pop{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:30;padding:16px}
+#pop.open{display:flex}
+.pcard{background:var(--bg);border-top:4px solid var(--gold);border-radius:14px;max-width:480px;width:100%;max-height:90%;overflow:auto;padding:16px}
+.pcard h3{color:var(--maroon);margin:0 0 4px;font-size:19px}.pcard ol{padding-left:20px}.pcard li{font-size:14.5px;margin:8px 0}
+footer{padding:18px 16px 28px;color:var(--muted);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<div class="logo">Exam<span>Setu</span></div>
+<p class="tag">Every exam update. One trusted place.</p>
+<input id="q" class="search" type="search" enterkeyhint="search" placeholder="Search exam (e.g. SSC, NEET, UPSC)" autocomplete="off">
+</div></header>
+
+<main><div class="wrap">
+<h2>Choose your exam</h2>
+<p class="sub">Tap an exam to see Admit Card, Result, Answer Key, Syllabus and Apply links.</p>
+<div class="chips" id="chips"></div>
+<p class="sub" id="count"></p>
+<div class="grid" id="grid"></div>
+<div class="empty" id="empty" hidden>No exam found. Try another name.</div>
+
+<!-- SEPARATE SECTION ON SAME PAGE: STUDENT FORM TOOLS -->
+<section class="tools-section" id="form-tools">
+  <h2>Student Form Tools</h2>
+  <p class="sub">Resize Photo/Signature, calculate exact Age, or make a compressed PDF right here — nothing is uploaded to any server.</p>
+  <div class="tools-grid">
+    <!-- Tool 1: Photo & Signature Resizer -->
+    <div class="tool-box">
+      <h3>1. Photo &amp; Sign Resizer</h3>
+      <div class="tmeta">Exact SSC, IBPS, UPSC, BPSC, RRB sizes + Name/Date stamp.</div>
+      <div class="fgrp">
+        <label>1. Select Exam / Board</label>
+        <select id="rExam">
+          <option value="SSC">SSC (CGL / CHSL / MTS / GD / CPO)</option>
+          <option value="UPSC">UPSC (IAS / NDA / CDS / CAPF)</option>
+          <option value="IBPS">IBPS / SBI / RBI (Banking)</option>
+          <option value="RRB">RRB (NTPC / Group D / ALP / JE)</option>
+          <option value="NTA">NTA (NEET / JEE / CUET / UGC NET)</option>
+          <option value="BPSC">BPSC (Bihar PSC)</option>
+          <option value="UPPSC">UPPSC / UPSSSC (Uttar Pradesh)</option>
+          <option value="ARMY">Indian Army Agniveer</option>
+          <option value="CBSE">CBSE / CTET</option>
+        </select>
+      </div>
+      <div class="fgrp">
+        <label>2. Select Document Type</label>
+        <select id="rDoc">
+          <option value="photo">Passport Photo (200x230 px, 20-50 KB)</option>
+          <option value="sign">Signature (140x60 px, 10-20 KB)</option>
+        </select>
+      </div>
+      <div class="fgrp">
+        <label>Select Image (JPG / PNG)</label>
+        <input type="file" id="rFile" accept="image/*">
+      </div>
+      <div id="stampFields" class="frow">
+        <div class="fgrp">
+          <label>Name on Photo (Opt.)</label>
+          <input type="text" id="rName" placeholder="e.g. RAHUL KUMAR">
+        </div>
+        <div class="fgrp">
+          <label>Date on Photo (Opt.)</label>
+          <input type="text" id="rDate" placeholder="e.g. 12/11/2026">
+        </div>
+      </div>
+      <button type="button" class="btn ok" id="rGen">Resize &amp; Compress</button>
+      <div id="rOut" class="preview-box" hidden></div>
+    </div>
+
+    <!-- Tool 2: Age & Eligibility Calculator -->
+    <div class="tool-box">
+      <h3>2. Age &amp; Eligibility Calc</h3>
+      <div class="tmeta">Exact age on cutoff date with OBC / SC / ST / PwBD relaxation.</div>
+      <div class="fgrp">
+        <label>Exam Preset (or Custom)</label>
+        <select id="aPreset">
+          <option value="0">Custom Age Limit &amp; Cutoff Date</option>
+          <option value="1">UPSC Civil Services / CAPF (21-32 yrs)</option>
+          <option value="2">UPSC NDA / NA (16.5-19.5 yrs)</option>
+          <option value="3">UPSC CDS (19-25 yrs)</option>
+          <option value="4">SSC CGL / CPO (18-30 yrs)</option>
+          <option value="5">SSC CHSL / MTS / GD (18-27 yrs)</option>
+          <option value="6">IBPS / SBI PO &amp; Clerk (20-30 yrs)</option>
+          <option value="7">RBI Grade B / Assistant (20-30 yrs)</option>
+          <option value="8">RRB NTPC / Group D / ALP (18-33 yrs)</option>
+          <option value="9">BPSC / UPPSC / UPSSSC (21-37 yrs)</option>
+          <option value="10">Indian Army Agniveer (17.5-21 yrs)</option>
+          <option value="11">NEET UG (Min 17 yrs, No Upper Limit)</option>
+          <option value="12">JEE Main / CUET / UGC NET / CTET (No Age Limit)</option>
+        </select>
+      </div>
+      <div class="frow">
+        <div class="fgrp">
+          <label>Date of Birth</label>
+          <input type="date" id="aDob">
+        </div>
+        <div class="fgrp">
+          <label>Cutoff Date</label>
+          <input type="date" id="aCut" value="2026-08-01">
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fgrp">
+          <label>Min Age (Yrs)</label>
+          <input type="number" step="0.5" id="aMin" value="18">
+        </div>
+        <div class="fgrp">
+          <label>Max Age (Gen)</label>
+          <input type="number" id="aMax" value="30">
+        </div>
+      </div>
+      <div class="fgrp">
+        <label>Category Relaxation</label>
+        <select id="aCat">
+          <option value="0">General / EWS (+0 Years)</option>
+          <option value="3">OBC Non-Creamy Layer (+3 Years)</option>
+          <option value="5">SC / ST (+5 Years)</option>
+          <option value="10">PwBD General (+10 Years)</option>
+          <option value="13">PwBD OBC (+13 Years)</option>
+          <option value="15">PwBD SC/ST (+15 Years)</option>
+        </select>
+      </div>
+      <button type="button" class="btn ok" id="aCalc">Check Eligibility</button>
+      <div id="aOut"></div>
+    </div>
+
+    <!-- Tool 3: Photo to Compressed PDF -->
+    <div class="tool-box">
+      <h3>3. Photo to PDF (&lt;300 KB)</h3>
+      <div class="tmeta">Merge 1–5 ID/Certificate photos into one small PDF file.</div>
+      <div class="fgrp">
+        <label>Select 1 to 5 Images (JPG / PNG)</label>
+        <input type="file" id="pFiles" accept="image/*" multiple>
+      </div>
+      <div class="fgrp">
+        <label>Target Max PDF Size</label>
+        <select id="pTarget">
+          <option value="280">Under 300 KB (UPSC / SSC / BPSC)</option>
+          <option value="190">Under 200 KB</option>
+          <option value="480">Under 500 KB</option>
+        </select>
+      </div>
+      <button type="button" class="btn ok" id="pMake">Create Compressed PDF</button>
+      <div id="pOut" class="preview-box" hidden></div>
+    </div>
+  </div>
+</section>
+</div></main>
+
+<footer>ExamSetu is an independent information website, not connected to any government body. Always confirm every detail on the official website before applying.</footer>
+
+<div id="sheet"><div class="panel" id="panel"></div></div>
+<div id="pop"><div class="pcard" id="pcard"></div></div>
+
+<script>
+// ===== OPTIONAL GOOGLE SHEET LINK =====
+var SHEET_CSV_URL = "";
+
+var VERIFIED = "November 2026";
+var EXAMS = [
+{n:"UPSC Civil Services (IAS/IPS)",st:"Last Date in 3 Days",sc:"red",o:"UPSC",c:"UPSC",u:"https://upsc.gov.in",p:"https://upsconline.nic.in",a:"https://upsconline.nic.in/eadmitcard/index.php",r:"https://upsc.gov.in/examinations/written-results",k:"https://upsc.gov.in/examinations/answer-keys",s:"https://upsc.gov.in/examinations/revised-syllabus-scheme",f:"https://upsc.gov.in/examinations/active-exams"},
+{n:"UPSC NDA / NA",o:"UPSC",c:"Defence",u:"https://upsc.gov.in",p:"https://upsconline.nic.in",a:"https://upsconline.nic.in/eadmitcard/index.php",r:"https://upsc.gov.in/examinations/written-results",k:"https://upsc.gov.in/examinations/answer-keys",s:"https://upsc.gov.in/examinations/revised-syllabus-scheme",f:"https://upsc.gov.in/examinations/active-exams"},
+{n:"UPSC CDS",o:"UPSC",c:"Defence",u:"https://upsc.gov.in",p:"https://upsconline.nic.in",a:"https://upsconline.nic.in/eadmitcard/index.php",r:"https://upsc.gov.in/examinations/written-results",k:"https://upsc.gov.in/examinations/answer-keys",s:"https://upsc.gov.in/examinations/revised-syllabus-scheme",f:"https://upsc.gov.in/examinations/active-exams"},
+{n:"UPSC CAPF",o:"UPSC",c:"UPSC",u:"https://upsc.gov.in",p:"https://upsconline.nic.in",a:"https://upsconline.nic.in/eadmitcard/index.php",r:"https://upsc.gov.in/examinations/written-results",k:"https://upsc.gov.in/examinations/answer-keys",s:"https://upsc.gov.in/examinations/revised-syllabus-scheme",f:"https://upsc.gov.in/examinations/active-exams"},
+{n:"SSC CGL",o:"Staff Selection Commission",c:"SSC",u:"https://ssc.gov.in",p:"https://ssc.gov.in/login",a:"https://ssc.gov.in/for-candidates/admit-card",r:"https://ssc.gov.in/home/candidate-result",k:"https://ssc.gov.in/for-candidates/answer-key",s:"https://ssc.gov.in/for-candidates/syllabus",f:"https://ssc.gov.in/home/notice-board"},
+{n:"SSC CHSL",o:"Staff Selection Commission",c:"SSC",u:"https://ssc.gov.in",p:"https://ssc.gov.in/login",a:"https://ssc.gov.in/for-candidates/admit-card",r:"https://ssc.gov.in/home/candidate-result",k:"https://ssc.gov.in/for-candidates/answer-key",s:"https://ssc.gov.in/for-candidates/syllabus",f:"https://ssc.gov.in/home/notice-board"},
+{n:"SSC MTS",o:"Staff Selection Commission",c:"SSC",u:"https://ssc.gov.in",p:"https://ssc.gov.in/login",a:"https://ssc.gov.in/for-candidates/admit-card",r:"https://ssc.gov.in/home/candidate-result",k:"https://ssc.gov.in/for-candidates/answer-key",s:"https://ssc.gov.in/for-candidates/syllabus",f:"https://ssc.gov.in/home/notice-board"},
+{n:"SSC GD Constable",o:"Staff Selection Commission",c:"SSC",u:"https://ssc.gov.in",p:"https://ssc.gov.in/login",a:"https://ssc.gov.in/for-candidates/admit-card",r:"https://ssc.gov.in/home/candidate-result",k:"https://ssc.gov.in/for-candidates/answer-key",s:"https://ssc.gov.in/for-candidates/syllabus",f:"https://ssc.gov.in/home/notice-board"},
+{n:"SSC CPO",o:"Staff Selection Commission",c:"SSC",u:"https://ssc.gov.in",p:"https://ssc.gov.in/login",a:"https://ssc.gov.in/for-candidates/admit-card",r:"https://ssc.gov.in/home/candidate-result",k:"https://ssc.gov.in/for-candidates/answer-key",s:"https://ssc.gov.in/for-candidates/syllabus",f:"https://ssc.gov.in/home/notice-board"},
+{n:"IBPS PO",o:"IBPS",c:"Banking",u:"https://www.ibps.in",p:"https://www.ibps.in/crp-po-mt/",a:"https://www.ibps.in/crp-po-mt/",r:"https://www.ibps.in/crp-po-mt/",s:"https://www.ibps.in/crp-po-mt/",f:"https://www.ibps.in/crp-po-mt/"},
+{n:"IBPS Clerk",o:"IBPS",c:"Banking",u:"https://www.ibps.in",p:"https://www.ibps.in/crp-clerical-cadre/",a:"https://www.ibps.in/crp-clerical-cadre/",r:"https://www.ibps.in/crp-clerical-cadre/",s:"https://www.ibps.in/crp-clerical-cadre/",f:"https://www.ibps.in/crp-clerical-cadre/"},
+{n:"IBPS RRB (PO / Clerk)",o:"IBPS",c:"Banking",u:"https://www.ibps.in",p:"https://www.ibps.in/crp-rrb/",a:"https://www.ibps.in/crp-rrb/",r:"https://www.ibps.in/crp-rrb/",s:"https://www.ibps.in/crp-rrb/",f:"https://www.ibps.in/crp-rrb/"},
+{n:"IBPS SO",o:"IBPS",c:"Banking",u:"https://www.ibps.in",p:"https://www.ibps.in/crp-specialist-officers/",a:"https://www.ibps.in/crp-specialist-officers/",r:"https://www.ibps.in/crp-specialist-officers/",s:"https://www.ibps.in/crp-specialist-officers/",f:"https://www.ibps.in/crp-specialist-officers/"},
+{n:"SBI PO / Clerk",o:"State Bank of India",c:"Banking",u:"https://sbi.co.in/web/careers/current-openings",p:"https://sbi.co.in/web/careers/current-openings",a:"https://sbi.co.in/web/careers/current-openings",r:"https://sbi.co.in/web/careers/join-sbi/recruitment-results",s:"https://sbi.co.in/web/careers/current-openings",f:"https://sbi.co.in/web/careers/current-openings"},
+{n:"RBI Grade B / Assistant / Office Attendant",o:"Reserve Bank of India",c:"Banking",u:"https://www.rbi.org.in",p:"https://opportunities.rbi.org.in/Scripts/Vacancies.aspx",a:"https://website.rbi.org.in/web/rbi/careers/call-letters",r:"https://opportunities.rbi.org.in/Scripts/resultsnew.aspx",s:"https://opportunities.rbi.org.in/Scripts/Vacancies.aspx",f:"https://opportunities.rbi.org.in/Scripts/Vacancies.aspx",d:{sample:1,sum:"Office Attendant recruitment by the Reserve Bank of India (sample data from the starter file).",dates:[["Application begins","15/01/2026"],["Last date to apply","04/02/2026"],["Last date to pay fee","04/02/2026"],["Exam date","28/02/2026 and 01/03/2026"],["Admit card","23/02/2026"],["Result","22/06/2026"]],fee:[["General / OBC / EWS","Rs. 450"],["SC / ST","Rs. 50"],["PH (Divyang)","Rs. 50"]],age:"Minimum 18 years, maximum 25 years (as on 01/01/2026). Relaxation as per RBI rules.",vac:"Office Attendant: 572 posts (UR 291, EWS 51, OBC 83, SC 89, ST 58).",el:"Class 10 pass from a recognized board. Knowledge of the local language."}},
+{n:"RRB NTPC",o:"Railway Recruitment Board",c:"Railway",u:"https://www.rrbcdg.gov.in",p:"https://www.rrbapply.gov.in",a:"https://www.rrbcdg.gov.in",r:"https://www.rrbcdg.gov.in",k:"https://www.rrbcdg.gov.in",s:"https://www.rrbcdg.gov.in",f:"https://www.rrbcdg.gov.in"},
+{n:"RRB Group D",o:"Railway Recruitment Board",c:"Railway",u:"https://www.rrbcdg.gov.in",p:"https://www.rrbapply.gov.in",a:"https://www.rrbcdg.gov.in",r:"https://www.rrbcdg.gov.in",k:"https://www.rrbcdg.gov.in",s:"https://www.rrbcdg.gov.in",f:"https://www.rrbcdg.gov.in"},
+{n:"RRB ALP / Technician",o:"Railway Recruitment Board",c:"Railway",u:"https://www.rrbcdg.gov.in",p:"https://www.rrbapply.gov.in",a:"https://www.rrbcdg.gov.in",r:"https://www.rrbcdg.gov.in",k:"https://www.rrbcdg.gov.in",s:"https://www.rrbcdg.gov.in",f:"https://www.rrbcdg.gov.in"},
+{n:"RRB JE / SSE",o:"Railway Recruitment Board",c:"Railway",u:"https://www.rrbcdg.gov.in",p:"https://www.rrbapply.gov.in",a:"https://www.rrbcdg.gov.in",r:"https://www.rrbcdg.gov.in",k:"https://www.rrbcdg.gov.in",s:"https://www.rrbcdg.gov.in",f:"https://www.rrbcdg.gov.in"},
+{n:"Indian Army Agniveer",o:"Indian Army",c:"Defence",u:"https://joinindianarmy.nic.in",p:"https://joinindianarmy.nic.in",a:"https://joinindianarmy.nic.in",r:"https://joinindianarmy.nic.in",s:"https://joinindianarmy.nic.in",f:"https://joinindianarmy.nic.in"},
+{n:"NEET UG",o:"NTA",c:"Entrance",u:"https://neet.nta.nic.in",p:"https://neet.nta.nic.in",a:"https://neet.nta.nic.in",r:"https://neet.nta.nic.in",k:"https://neet.nta.nic.in",s:"https://neet.nta.nic.in",f:"https://neet.nta.nic.in"},
+{n:"JEE Main",o:"NTA",c:"Entrance",u:"https://jeemain.nta.nic.in",p:"https://jeemain.nta.nic.in",a:"https://jeemain.nta.nic.in",r:"https://jeemain.nta.nic.in",k:"https://jeemain.nta.nic.in",s:"https://jeemain.nta.nic.in",f:"https://jeemain.nta.nic.in"},
+{n:"CUET UG / PG",o:"NTA",c:"Entrance",u:"https://cuet.nta.nic.in",p:"https://cuet.nta.nic.in",a:"https://cuet.nta.nic.in",r:"https://cuet.nta.nic.in",k:"https://cuet.nta.nic.in",s:"https://cuet.nta.nic.in",f:"https://cuet.nta.nic.in"},
+{n:"UGC NET",o:"NTA",c:"Entrance",u:"https://ugcnet.nta.nic.in",p:"https://ugcnet.nta.nic.in",a:"https://ugcnet.nta.nic.in",r:"https://ugcnet.nta.nic.in",k:"https://ugcnet.nta.nic.in",s:"https://ugcnet.nta.nic.in",f:"https://ugcnet.nta.nic.in"},
+{n:"CBSE Class 10 / 12",o:"CBSE",c:"Board",u:"https://www.cbse.gov.in",p:"https://www.cbse.gov.in",a:"https://www.cbse.gov.in",r:"https://results.cbse.nic.in",s:"https://cbseacademic.nic.in/curriculum_2026.html",f:"https://www.cbse.gov.in/cbsenew/cbse.html"},
+{n:"CBSE CTET",o:"CBSE",c:"Teaching",u:"https://ctet.nic.in",p:"https://ctet.nic.in",a:"https://ctet.nic.in",r:"https://ctet.nic.in",k:"https://ctet.nic.in",s:"https://ctet.nic.in",f:"https://ctet.nic.in"},
+{n:"BPSC (Bihar)",o:"Bihar PSC",c:"State",u:"https://bpsc.bihar.gov.in",p:"https://bpsconline.bihar.gov.in/candidate/login",a:"https://bpsconline.bihar.gov.in/candidate/login",r:"https://bpsc.bihar.gov.in",k:"https://bpsc.bihar.gov.in",s:"https://bpsc.bihar.gov.in",f:"https://bpsc.bihar.gov.in"},
+{n:"UPPSC (Uttar Pradesh)",o:"UP PSC",c:"State",u:"https://uppsc.up.nic.in",p:"https://uppsc.up.nic.in",a:"https://uppsc.up.nic.in",r:"https://uppsc.up.nic.in",k:"https://uppsc.up.nic.in",s:"https://uppsc.up.nic.in",f:"https://uppsc.up.nic.in"},
+{n:"UPSSSC PET & Other",o:"UP Subordinate Services",c:"State",u:"https://upsssc.gov.in",p:"https://upsssc.gov.in",a:"https://upsssc.gov.in",r:"https://upsssc.gov.in",k:"https://upsssc.gov.in",s:"https://upsssc.gov.in",f:"https://upsssc.gov.in"}
+];
+// ===============================================
+var CATS=["All","UPSC","SSC","Banking","Railway","Defence","Entrance","State","Board","Teaching"];
+var cat="All",term="";
+var ALIAS={UPSC:"ias ips civil services",SSC:"staff selection",Banking:"bank",Railway:"rail railways rrb",Defence:"army navy air force",Entrance:"admission college",State:"state psc",Board:"school class",Teaching:"teacher"};
+var $=function(i){return document.getElementById(i)};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function chips(){$("chips").innerHTML=CATS.map(function(c){return '<button class="chip'+(c===cat?' on':'')+'" data-c="'+c+'">'+c+'</button>'}).join("")}
+function list(){
+  var words=term.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  var r=EXAMS.map(function(e,i){return{e:e,i:i}}).filter(function(x){
+    var h=(x.e.n+" "+x.e.o+" "+x.e.c+" "+(ALIAS[x.e.c]||"")).toLowerCase();
+    return (cat==="All"||x.e.c===cat)&&words.every(function(w){return h.indexOf(w)>-1})});
+  function getBadge(e){
+    if(e.st){
+      var cls = e.sc==="red"?"b-red":(e.sc==="green"?"b-green":"b-orange");
+      return '<span class="badge '+cls+'">'+esc(e.st)+'</span>';
+    }
+    var n = e.n;
+    if(n.indexOf("SSC CGL")>-1 || n.indexOf("RRB NTPC")>-1 || n.indexOf("BPSC")>-1)
+      return '<span class="badge b-red">Last Date in 3 Days</span>';
+    if(n.indexOf("SSC CHSL")>-1 || n.indexOf("IBPS PO")>-1 || n.indexOf("NDA")>-1 || n.indexOf("JEE")>-1)
+      return '<span class="badge b-orange">Admit Card Out</span>';
+    if(n.indexOf("RBI")>-1 || n.indexOf("CBSE Class")>-1 || n.indexOf("SSC GD")>-1 || n.indexOf("NEET")>-1)
+      return '<span class="badge b-green">Result Declared</span>';
+    return '<span class="badge b-orange">Application Open</span>';
+  }
+  $("grid").innerHTML=r.map(function(x){return '<button class="card" data-i="'+x.i+'"><b>'+esc(x.e.n)+'</b><small>'+esc(x.e.o)+'</small>'+getBadge(x.e)+'</button>'}).join("");
+  $("empty").hidden=r.length>0;
+  $("count").textContent=r.length+(r.length===1?" exam found":" exams found");
+}
+
+// Accurate, exam-specific instructions & checklist ("needed things") for every process
+var K=['Apply Online','Admit Card','Result','Answer Key'];
+function O(name,url,a,b,c,d,u2,req){
+  return {name:name,url:url,k:K,common:[],steps:{'Apply Online':a,'Admit Card':b,'Result':c,'Answer Key':d},u2:u2||{},req:req||{}};
+}
+
+var LOGIN={};
+
+LOGIN['Staff Selection Commission']=O('SSC','https://ssc.gov.in',
+[
+  'Open ssc.gov.in (button below) and tap "Login or Register" at the top right.',
+  'New user on ssc.gov.in? Complete One Time Registration (OTR) first using your Aadhaar/ID, mobile, email and Class 10 roll number. (Old ssc.nic.in OTR does not work here).',
+  'Log in with your new OTR Registration Number and Password.',
+  'Go to "Live Examinations" -> click "Apply" under your exam.',
+  'Capture a LIVE PHOTOGRAPH directly via webcam or the official "mySSC" mobile app in good light against a plain background (no glasses/cap).',
+  'Upload scanned signature (10-20 KB, 4.0 cm x 2.0 cm, JPEG), pay fee (Rs. 100; Exempt for Women/SC/ST/PwBD/ESM), submit and save the PDF.'
+],
+[
+  'Open ssc.gov.in and log in to your Candidate Dashboard (Admit Cards are now hosted directly on ssc.gov.in instead of separate regional sites).',
+  'Check your Exam City Intimation Slip first (usually released 7-10 days before exam).',
+  'Click "Admission Certificate / Admit Card" 3-4 days before your exam date.',
+  'Download and print the Admit Card along with the COVID/Self-Declaration page if attached.'
+],
+[
+  'Open the SSC Results page (no login needed) and select your exam tab (CGL / CHSL / GD / MTS / CPO).',
+  'Download the List PDF (Write-up & Roll Number list) and search your Roll Number or Name.',
+  'To view your individual normalized marks / scorecard, log in on ssc.gov.in with your OTR Registration Number and Password.'
+],
+[
+  'Log in on ssc.gov.in with your OTR Registration Number and Password.',
+  'Go to "My Applications" -> click "Answer Key Challenge" under your exam.',
+  'Download your Question Paper + Response Sheet PDF immediately (link stays active for only 3-4 days).',
+  'To challenge any wrong answer, pay Rs. 100 per question online before the deadline.'
+],
+{
+  'Apply Online':'https://ssc.gov.in/login',
+  'Admit Card':'https://ssc.gov.in/for-candidates/admit-card',
+  'Result':'https://ssc.gov.in/home/candidate-result',
+  'Answer Key':'https://ssc.gov.in/for-candidates/answer-key'
+},
+{
+  'Apply Online':['Aadhaar Card / Govt Photo ID','Class 10 Certificate (for Roll No & DOB)','Webcam or mySSC App (for Live Photo Capture)','Scanned Signature (10-20 KB, JPEG)','Active Mobile & Email for OTP'],
+  'Admit Card':['OTR Registration Number & Password','Printed Admit Card + 2 Passport Photos','Original Photo ID (Aadhaar/PAN/Voter ID/DL) with exact DOB match'],
+  'Result':['Roll Number (for PDF Merit List)','OTR Registration Number & Password (for Marks/Scorecard)'],
+  'Answer Key':['OTR Registration Number & Password','Debit/Credit Card or UPI (Rs. 100 per challenged question)']
+});
+
+LOGIN['UPSC']=O('UPSC','https://upsc.gov.in',
+[
+  'Open upsconline.nic.in (button below) and complete Universal Registration / One Time Registration (OTR) if not done already.',
+  'Verify your OTR profile (Name, Father/Mother Name, DOB, Class 10 Roll No) and log in via Email/Mobile OTP or URN/OTR ID.',
+  'Open the "Common Application Form / Examinations" tab and click Apply for your active exam (CSE / NDA / CDS / CAPF).',
+  'Fill Part-I (centre choice, optional subject/preferences) and Part-II (fee payment Rs. 100; Exempt for Female/SC/ST/PwBD).',
+  'Upload recent photograph (with name & date printed if specified in notice), signature, and Photo ID PDF (20-300 KB).',
+  'Click Final Submit and download the Application Receipt.'
+],
+[
+  'Open upsconline.nic.in/eadmitcard (button below) ~7 days before the exam.',
+  'Select your exam and log in using your Registration ID (URN/OTR) or Roll Number and Date of Birth.',
+  'Verify your photo, name, and exam venue. Print the e-Admit Card on A4 paper (if photo is unclear, carry 2 passport photos + undertaking).'
+],
+[
+  'Open upsc.gov.in -> Examinations -> Written Results (or Final Results) — no login required.',
+  'Download the Roll Number / Name-wise Result PDF and search your 7-digit Roll Number.',
+  'Marks of qualified/non-qualified candidates are uploaded separately on upsc.gov.in after the final result.'
+],
+[
+  'Open upsc.gov.in -> Examinations -> Answer Keys (no login needed).',
+  'Note: UPSC publishes official Answer Keys only after the entire examination cycle (including interview/final result) is completed.',
+  'Download the Set A/B/C/D Answer Key PDF and match with your question paper.'
+],
+{
+  'Apply Online':'https://upsconline.nic.in',
+  'Admit Card':'https://upsconline.nic.in/eadmitcard/index.php',
+  'Result':'https://upsc.gov.in/examinations/written-results',
+  'Answer Key':'https://upsc.gov.in/examinations/answer-keys'
+},
+{
+  'Apply Online':['OTR / Universal Registration ID','Photo ID Card PDF (Aadhaar/Passport/Voter ID/DL, 20-300 KB)','Scanned Photo & Signature (20-300 KB, JPG)','Graduation / Class 12 Details'],
+  'Admit Card':['UPSC Registration ID (URN) or Roll Number','Date of Birth','Same Original Photo ID uploaded during application'],
+  'Result':['7-Digit UPSC Roll Number'],
+  'Answer Key':['Your Question Paper Booklet Series (Set A, B, C, or D)']
+});
+
+LOGIN['IBPS']=O('IBPS','https://www.ibps.in',
+[
+  'Open ibps.in and select your CRP portal (CRP PO/MT, Clerical, RRB, or Specialist Officers).',
+  'Click "Click here for New Registration", enter basic details, and note your Provisional Registration Number & Password.',
+  'Capture live photo (if enabled) and upload 4 mandatory scanned files: Passport Photo (20-50 KB), Signature in black ink (10-20 KB, 140x60 px), Left Thumb Impression (20-50 KB, 240x240 px), and Handwritten Declaration in English (50-100 KB, 800x400 px).',
+  'Fill academic details, bank preferences, pay fee (Rs. 850 Gen/OBC/EWS; Rs. 175 SC/ST/PwBD), and submit.'
+],
+[
+  'Open your CRP section on ibps.in and click "Online Prelims / Mains Exam Call Letter".',
+  'Log in with your Registration Number / Roll Number and Password / Date of Birth (DD-MM-YY format).',
+  'Print the Call Letter and affix the exact same passport photograph used in the form.'
+],
+[
+  'Open your CRP section on ibps.in and click the Result Status / Scorecard link (active for 7-15 days only).',
+  'Enter Registration Number / Roll Number and Password / DOB to check qualifying status and section-wise cutoff marks.'
+],
+[
+  'IBPS does not release question papers or provisional answer keys after CBT exams.',
+  'Check your section-wise and overall marks directly in the IBPS Scorecard on ibps.in.'
+],
+{},
+{
+  'Apply Online':['Passport Photo (20-50 KB)','Black Ink Signature (10-20 KB, NOT in capital letters)','Left Thumb Impression on white paper (20-50 KB)','English Handwritten Declaration on white paper (50-100 KB)'],
+  'Admit Card':['Registration No / Roll No & Password / DOB (DD-MM-YY)','Printed Call Letter + Extra Passport Photo','Original Photo ID + 1 Photocopy of that ID'],
+  'Result':['Registration Number / Roll Number','Password or Date of Birth (DD-MM-YY)'],
+  'Answer Key':['Not published by IBPS (check Scorecard instead)']
+});
+
+LOGIN['SBI']=O('SBI','https://sbi.co.in/web/careers/current-openings',
+[
+  'Open sbi.co.in -> Careers -> Current Openings and expand your recruitment (PO / Clerk / SO).',
+  'Click "Apply Online" -> "New Registration" to generate your Registration Number and Password.',
+  'Upload Photo (20-50 KB), Signature (10-20 KB, black ink), Left Thumb Impression (20-50 KB), and SBI Handwritten Declaration (50-100 KB).',
+  'Fill circle/state preference, pay fee (Rs. 750 Gen/OBC/EWS; Nil for SC/ST/PwBD), and print the e-Receipt & Form.'
+],
+[
+  'Open sbi.co.in -> Careers -> Current Openings -> Download Preliminary / Main Exam Call Letter.',
+  'Enter Registration Number / Roll Number and Password / Date of Birth (DD-MM-YY).',
+  'Print the Call Letter along with the "Acquaint Yourself" booklet.'
+],
+[
+  'Open sbi.co.in -> Careers -> Join SBI -> Recruitment Results (button below).',
+  'Download the Roll Number merit list PDF for Prelims/Mains, or click the Marks link to log in and check section scores.'
+],
+[
+  'SBI does not publish provisional answer keys for PO/Clerk exams.',
+  'Individual marks and category cutoffs are released on the SBI Careers Results page after each phase.'
+],
+{
+  'Result':'https://sbi.co.in/web/careers/join-sbi/recruitment-results'
+},
+{
+  'Apply Online':['Passport Photo (20-50 KB)','Black Ink Signature (10-20 KB)','Left Thumb Impression (20-50 KB)','English Handwritten Declaration (50-100 KB)'],
+  'Admit Card':['Registration Number & Password / DOB (DD-MM-YY)','Printed Call Letter + 2 Passport Photos','Original ID Proof + Photocopy'],
+  'Result':['Roll Number (for PDF) or Registration No + DOB (for Marks)'],
+  'Answer Key':['Not published by SBI']
+});
+
+LOGIN['RBI']=O('RBI','https://www.rbi.org.in',
+[
+  'Open opportunities.rbi.org.in -> Current Vacancies (button below) and click on your post (Grade B / Assistant / Office Attendant).',
+  'Click "Online Application Form" -> "New Registration" and note your Registration Number & Password.',
+  'Upload Photo, Signature, Left Thumb Impression, and Handwritten Declaration as per RBI dimensions, pay fee, and submit.'
+],
+[
+  'Open the RBI Call Letters page (button below) and click the Admission Letter link for your post.',
+  'Log in using Registration Number / Roll Number and Password / Date of Birth (DD-MM-YY).',
+  'Download and print the Call Letter along with the Information Handout.'
+],
+[
+  'Open opportunities.rbi.org.in -> Results (button below).',
+  'Click your exam result notice to open the Roll Number list PDF; individual mark sheets are released on the same page later.'
+],
+[
+  'RBI does not release answer keys for Phase-I/Prelims objective tests.',
+  'Check the Results section on opportunities.rbi.org.in for mark sheets and cutoffs.'
+],
+{
+  'Apply Online':'https://opportunities.rbi.org.in/Scripts/Vacancies.aspx',
+  'Admit Card':'https://website.rbi.org.in/web/rbi/careers/call-letters',
+  'Result':'https://opportunities.rbi.org.in/Scripts/resultsnew.aspx'
+},
+{
+  'Apply Online':['Photo, Signature, Left Thumb Impression & Handwritten Declaration','Class 10/12/Graduation Marksheets','Domicile / Local Language details (for Assistant/Attendant)'],
+  'Admit Card':['Registration Number & Password / DOB (DD-MM-YY)','Printed Admission Letter + Original Photo ID & Photocopy'],
+  'Result':['Roll Number'],
+  'Answer Key':['Not published by RBI']
+});
+
+LOGIN['RRB']=O('RRB','https://www.rrbcdg.gov.in',
+[
+  'Open the central Railway portal rrbapply.gov.in (button below) and click "Apply" -> "Create an Account".',
+  'Complete One-Time Account Creation using Aadhaar verification, mobile OTP, and email OTP.',
+  'Log in, select your RRB Zone carefully (cannot be changed later), fill education/ITI/diploma details, and upload live/recent photo & signature.',
+  'Pay fee (Rs. 500 Gen/OBC/EWS — Rs. 400 refunded after CBT-1; Rs. 250 SC/ST/Female/EBC — full Rs. 250 refunded after CBT-1).'
+],
+[
+  'Open your applied RRB regional website (or rrbapply.gov.in) 10 days before exam to download your Exam City & Date Intimation Slip (and Free Travel Authority for SC/ST).',
+  'Download the actual E-Call Letter 4 days before your exam date using Registration Number and Date of Birth.',
+  'Carry a colour/clear printout + Original Aadhaar Card (biometric Aadhaar verification happens at the centre).'
+],
+[
+  'Open your applied RRB regional website and click the CEN Result link.',
+  'Download the shortlisted Roll Number PDF and search your Roll Number.',
+  'To view raw marks, pro-rated marks, and normalized percentile score, log in on the RRB Scorecard link with Registration Number & DOB.'
+],
+[
+  'Open your RRB regional website and click "Objection Tracker / Viewing of Question Paper, Responses & Keys".',
+  'Log in with Registration Number and DOB to download your Attempted Question Paper PDF.',
+  'Raise objections before the deadline by paying Rs. 50 per question (refunded if objection is found valid).'
+],
+{
+  'Apply Online':'https://www.rrbapply.gov.in'
+},
+{
+  'Apply Online':['Aadhaar Card (for instant e-KYC)','Passport Photo (plain white background, 30-70 KB) & Signature','Class 10 / ITI / Diploma / Degree Details','Bank Account Details (for CBT-1 Fee Refund)'],
+  'Admit Card':['RRB Registration Number & Date of Birth','Original Aadhaar Card (mandatory for centre biometric)','Printed E-Call Letter'],
+  'Result':['Roll Number (for PDF) or Registration No + DOB (for Scorecard)'],
+  'Answer Key':['Registration Number & Date of Birth','Debit/Credit Card or UPI (Rs. 50 per objection)']
+});
+
+LOGIN['Indian Army']=O('Army','https://joinindianarmy.nic.in',
+[
+  'Open joinindianarmy.nic.in, solve the captcha, and click "Agnipath" -> "User Registration".',
+  'Register using your Aadhaar number (or Class 10 certificate details), mobile, and email.',
+  'Log in under "JCO / OR Apply / Login", check eligibility for Agniveer GD / Tech / Clerk / Tradesman, fill the form, upload photo & signature, and submit (Fee: Rs. 250).'
+],
+[
+  'Open joinindianarmy.nic.in and log in to your Candidate Dashboard.',
+  'Click "Online CEE Admit Card" for the computer-based written exam (Phase-1) or "Rally Admit Card" for physical/medical tests (Phase-2).',
+  'Print the Admit Card on good quality paper without folding the barcode.'
+],
+[
+  'Open joinindianarmy.nic.in -> click "CEE Results" on the home page (no login required).',
+  'Select your ARO / ZRO PDF file and search your Roll Number.',
+  'Shortlisted candidates must download their Phase-2 Rally Admit Card from their login dashboard.'
+],
+[
+  'Indian Army does not publish official answer keys for Agniveer Online CEE.',
+  'Final merit lists are published ARO-wise on joinindianarmy.nic.in after Rally & Medical tests.'
+],
+{},
+{
+  'Apply Online':['Aadhaar Card linked with Mobile Number','Class 10 / Class 12 / ITI Marksheet','Scanned Photo (10-20 KB) & Signature (5-10 KB)','NCC / Sports Certificate (if claiming bonus marks)'],
+  'Admit Card':['Username (Email) & Password','Printed Admit Card (clean barcode) + Original Aadhaar Card','For Rally: Affidavit, Domicile, Caste & Character Certificates'],
+  'Result':['Army CEE Roll Number & ARO Name'],
+  'Answer Key':['Not published by Indian Army']
+});
+
+LOGIN['NTA']=O('NTA','',
+[
+  'Open the official NTA exam portal (button below: neet.nta.nic.in / jeemain.nta.nic.in / cuet.nta.nic.in / ugcnet.nta.nic.in).',
+  'Click "New Candidate Register Here", verify via Aadhaar / DigiLocker / ABC ID, and generate your Application Number.',
+  'Log in, fill personal & academic details, choose 4 exam cities, and upload Photo (10-200 KB), Signature (4-30 KB), and Category/PwD certificate if applicable.',
+  'Pay the exam fee online and download the Confirmation Page.'
+],
+[
+  'Open the exam website (button below) and download the "Advance City Intimation Slip" first to check your exam city.',
+  '3-4 days before the exam, click "Download Admit Card" and log in with Application Number + Date of Birth + Security Pin.',
+  'Print all pages of the Admit Card, paste a passport photo in the box, and put your left thumb impression before reaching the centre (sign only in front of the invigilator).'
+],
+[
+  'Open the exam website (button below) and click "View Result / Download NTA Scorecard".',
+  'Enter your Application Number and Date of Birth (or Password) to download your Percentile / NTA Score & All-India Rank.'
+],
+[
+  'Open the exam website and click "Display of Provisional Answer Key & Recorded Response Sheet".',
+  'Log in with Application Number + Password / DOB and save both your Response Sheet and Answer Key PDF.',
+  'To challenge any question, select the Question ID, upload supporting PDF proof, and pay Rs. 200 per question (non-refundable).'
+],
+{},
+{
+  'Apply Online':['Aadhaar Card / DigiLocker / ABC ID','Passport Photo (10-200 KB) & Postcard Photo (for NEET)','Scanned Signature (4-30 KB, JPG)','Category / EWS / PwBD Certificate (if applicable)'],
+  'Admit Card':['NTA Application Number & Date of Birth','Printed Admit Card + Self-Declaration Undertaking','2 Passport Photos + Original Photo ID'],
+  'Result':['NTA Application Number & Date of Birth'],
+  'Answer Key':['NTA Application Number & Date of Birth / Password','Rs. 200 per challenged question + Supporting PDF']
+});
+
+LOGIN['CBSE']=O('CBSE','https://www.cbse.gov.in',
+[
+  'Class 10 & 12 Regular Students: Your school submits the LOC (List of Candidates) form — verify your name, DOB, and subjects on the school checklist.',
+  'Class 10 & 12 Private Candidates: Apply online on cbse.gov.in under "Vyaktigat Pariksharthi" portal when forms open.',
+  'CTET: Open ctet.nic.in, register online, choose Paper-I / Paper-II, upload photo & signature, and pay the fee.'
+],
+[
+  'Class 10 & 12 Regular Students: Collect your signed Admit Card directly from your school.',
+  'Private Candidates & CTET: Open cbse.gov.in or ctet.nic.in, log in with Application/Registration Number & DOB, and print the Admit Card.'
+],
+[
+  'Open results.cbse.nic.in (button below) or open the DigiLocker / UMANG app.',
+  'For Class 10/12: Enter Roll Number, School Number, Date of Birth, and Admit Card ID.',
+  'Download your Digital Marksheet & Migration Certificate directly from DigiLocker.'
+],
+[
+  'Class 10 & 12: CBSE does not issue answer keys (students can apply for photocopy of evaluated answer books after results).',
+  'CTET: Log in on ctet.nic.in with Roll Number & DOB to download the OMR sheet and Provisional Answer Key.'
+],
+{
+  'Result':'https://results.cbse.nic.in'
+},
+{
+  'Apply Online':['Class 10/12: School registration (or Previous Roll No for Private)','CTET: Photo (10-100 KB), Signature (3-30 KB) & B.Ed/D.El.Ed details'],
+  'Admit Card':['Class 10/12 Regular: Collect from School Principal','CTET / Private: Application Number & Date of Birth'],
+  'Result':['Board Roll Number, School Number & Admit Card ID (printed on Admit Card)'],
+  'Answer Key':['CTET Roll Number & Date of Birth']
+});
+
+LOGIN['Bihar PSC']=O('BPSC','https://bpsc.bihar.gov.in',
+[
+  'Open bpsconline.bihar.gov.in (button below) and complete One Time Registration (OTR) — Name, Father/Mother Name, DOB, Gender & Aadhaar cannot be edited later.',
+  'Link your DigiLocker account (or skip to portal) and complete all 6 Profile sections (Personal, Address, Other, Qualification, Experience, Live Webcam Photo + Hindi & English Signatures).',
+  'Lock your OTR profile, select your active advertisement (CCE / TRE / AE), pay the fee (plus Rs. 200 biometric fee if Aadhaar is not provided), and submit.'
+],
+[
+  'Log in at bpsconline.bihar.gov.in/candidate/login (button below) with your OTR Username & Password.',
+  'Check your Exam City first, then upload a fresh passport photo (25 KB, 250x250 px) if prompted before downloading the e-Admit Card.',
+  'Print 2 copies of the e-Admit Card (one copy is submitted to the invigilator at the exam hall).'
+],
+[
+  'Open bpsc.bihar.gov.in (no login needed) and check the latest notices on the home page.',
+  'Click your exam Result PDF (Prelims / Mains / Final) and search your Roll Number.',
+  'Individual mark sheets are uploaded later on the BPSC Marksheet portal using Roll Number & DOB.'
+],
+[
+  'Open bpsc.bihar.gov.in and download the Provisional Answer Key PDF (Set A/B/C/D) from the home page notices.',
+  'To submit objections on any question, log in to your candidate dashboard at bpsconline.bihar.gov.in and upload authentic book proof.'
+],
+{
+  'Apply Online':'https://bpsconline.bihar.gov.in/candidate/login',
+  'Admit Card':'https://bpsconline.bihar.gov.in/candidate/login'
+},
+{
+  'Apply Online':['Aadhaar Card (saves Rs. 200 biometric fee)','Webcam for Live Photo Capture','Scanned Hindi Signature & English Signature (under 20 KB each)','All Matric to Graduation/B.Ed Certificates & Marks'],
+  'Admit Card':['BPSC OTR Username & Password','2 Printed Copies of e-Admit Card + Original Aadhaar Card'],
+  'Result':['BPSC Roll Number'],
+  'Answer Key':['Question Booklet Series (Set A, B, C, or D)']
+});
+
+LOGIN['UP PSC']=O('UPPSC','https://uppsc.up.nic.in',
+[
+  'Open otr.pariksha.nic.in or uppsc.up.nic.in and complete your mandatory One Time Registration (OTR) at least 72 hours before applying.',
+  'Log in via OTR Number, verify pre-filled personal & academic details, and select your exam (PCS / RO-ARO / AE).',
+  'Upload Photo & Signature (combined single image format as per UPPSC size), pay fee (Rs. 125 Gen/OBC/EWS; Rs. 65 SC/ST), and print the submitted form.'
+],
+[
+  'Open uppsc.up.nic.in -> Candidate Help Desk -> "Download Admit Card".',
+  'Enter your OTR Number (or Registration Number), Date of Birth, Gender, and Verification Code.',
+  'Print the Admit Card and carry 2 passport photos + original ID proof.'
+],
+[
+  'Open uppsc.up.nic.in -> List of Selected Candidates / Results (no login needed).',
+  'Open the Roll Number PDF of your exam and search your Roll Number.'
+],
+[
+  'Open uppsc.up.nic.in -> View Answer Key (no login needed).',
+  'Download your Subject/Series Answer Key PDF; send objections offline/online in the prescribed format before the last date.'
+],
+{},
+{
+  'Apply Online':['UPPSC OTR Number (mandatory before applying)','Combined Photo + Signature Image (JPG)','Domicile & Caste Certificate (for UP reservation)'],
+  'Admit Card':['UPPSC OTR Number & Date of Birth','Printed Admit Card + 2 Passport Photos + Original Photo ID'],
+  'Result':['UPPSC Roll Number'],
+  'Answer Key':['Question Booklet Series']
+});
+
+LOGIN['UP Subordinate Services']=O('UPSSSC','https://upsssc.gov.in',
+[
+  'Open upsssc.gov.in -> Candidate Registration and apply using your valid UPSSSC PET Registration Number (mandatory for most UPSSSC Mains posts).',
+  'Log in via PET Registration + OTP (or Personal Details), verify your photo/signature fetched from PET, and submit the initial Rs. 25 application fee.',
+  'If shortlisted for Mains, pay the Mains Exam Fee separately on upsssc.gov.in before downloading the Admit Card.'
+],
+[
+  'Open upsssc.gov.in -> Examination -> "Download Written Exam Admit Card".',
+  'Enter your Registration Number, Date of Birth, Gender, and Captcha (ensure Mains fee is paid first).',
+  'Download and print the Admit Card.'
+],
+[
+  'Open upsssc.gov.in -> Results -> click your exam Result / PET Scorecard link.',
+  'Enter Registration Number, Date of Birth, Gender, and Captcha to view your normalized score & percentile.'
+],
+[
+  'Open upsssc.gov.in -> Important Announcements / Answer Key.',
+  'Log in with Registration Number & Roll Number to view the Master Answer Key and raise objections (Rs. 100 per question).'
+],
+{},
+{
+  'Apply Online':['Valid UPSSSC PET Registration Number & Score','Mobile/Email for OTP verification','Online Payment Mode (Initial Fee Rs. 25)'],
+  'Admit Card':['UPSSSC Registration Number & Date of Birth','Printed Admit Card + Original Photo ID'],
+  'Result':['UPSSSC Registration Number & Date of Birth'],
+  'Answer Key':['Registration Number & Exam Roll Number']
+});
+
+LOGIN['State Bank of India']=LOGIN['SBI'];
+LOGIN['Reserve Bank of India']=LOGIN['RBI'];
+LOGIN['Railway Recruitment Board']=LOGIN['RRB'];
+
+function pop(e,lb){
+  var L=LOGIN[e.o],st=L.common.concat(L.steps[lb]||[]);
+  st.push('Portal menus update occasionally — always verify exact dates on the official PDF.');
+  var reqList=(L.req&&L.req[lb])||[];
+  var h='<h3>'+esc(lb)+' – '+esc(L.name)+'</h3><div class="meta">Exam: '+esc(e.n)+'</div>';
+  if(reqList.length){
+    h+='<div class="reqbox"><b>Things Needed ('+esc(lb)+'):</b><ul>'+reqList.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul></div>';
+  }
+  h+='<div class="meta" style="margin-bottom:6px;font-weight:600;color:var(--maroon)">Step-by-Step Process:</div>';
+  h+='<ol>'+st.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ol>';
+  var mapKey={'Apply Online':e.p,'Admit Card':e.a,'Result':e.r,'Answer Key':e.k};
+  var U=mapKey[lb]||(L.u2&&L.u2[lb])||L.url||e.u,pg=!!(mapKey[lb]||(L.u2&&L.u2[lb])),sc=(lb==='Result'&&e.r);
+  h+='<a class="btn '+(sc?'off2':'ok')+'" target="_blank" rel="noopener" href="'+esc(U)+'">'+(sc?'Open '+esc(L.name)+' Results / Scorecard page':(pg?'Open official '+esc(lb)+' page':'Open '+esc(L.name)+' official website'))+'</a>';
+  if(lb==='Result'&&e.u&&e.u!==U)h+='<a class="btn ok" target="_blank" rel="noopener" href="'+esc(e.u)+'">Open '+esc(L.name)+' Main Portal</a>';
+  h+='<button class="close" id="pc">Close</button>';
+  $('pcard').innerHTML=h;$('pop').classList.add('open');
+  $('pc').onclick=function(){$('pop').classList.remove('open')};
+}
+
+function demo(e){
+var B={UPSC:['Rs. 100','Rs. 0','Rs. 0','21 to 32 years','Bachelor degree from a recognized university','Prelims, Mains and Interview'],SSC:['Rs. 100','Rs. 0','Rs. 0','18 to 30 years','Class 10, 12 or graduation as per the post','Computer based test, skill or physical test, document verification'],Banking:['Rs. 850','Rs. 175','Rs. 175','20 to 30 years','Bachelor degree in any subject','Prelims, Mains and Interview'],Railway:['Rs. 500','Rs. 250','Rs. 250','18 to 33 years','Class 10, 12, ITI, diploma or degree as per the post','Computer based test, document verification, medical test'],Defence:['Rs. 250','Rs. 250','Rs. 250','17.5 to 21 years','Class 10 or 12 as per the post','Written test, physical test, medical test'],Entrance:['Rs. 1000','Rs. 500','Rs. 500','No fixed age limit','Class 12 pass or graduation as per the exam','Entrance test and counselling'],State:['Rs. 100','Rs. 25','Rs. 25','21 to 40 years','Bachelor degree from a recognized university','Prelims, Mains and Interview'],Board:['Paid through school','Paid through school','Paid through school','Not applicable','Student of Class 10 or 12','Board exam, result by marks'],Teaching:['Rs. 1000','Rs. 500','Rs. 500','No fixed age limit','Graduation with B.Ed or as per the exam','Written test']};
+var b=B[e.c]||B.SSC;
+return {demo:1,sum:'Demo summary for '+e.n+' by '+e.o+'. Real details will be added from the official notification.',dates:[['Application begins','01/12/2026'],['Last date to apply','31/12/2026'],['Last date to pay fee','31/12/2026'],['Exam date','15/02/2027'],['Admit card','08/02/2027'],['Result','15/04/2027']],fee:[['General / OBC / EWS',b[0]],['SC / ST',b[1]],['PH (Divyang)',b[2]]],age:b[3],vac:'Total 1000 posts (UR 450, EWS 100, OBC 270, SC 120, ST 60)',el:b[4],sel:b[5]};}
+
+function info(e){
+var d=e.d||demo(e),NA='Check the official notification';
+var t=function(r){return '<table>'+r.map(function(x){return '<tr><td>'+esc(x[0])+'</td><td>'+esc(x[1])+'</td></tr>'}).join('')+'</table>'};
+var s=function(h,b){return '<div class="sec"><h4>'+h+'</h4>'+b+'</div>'};
+var p=function(x){return '<p>'+esc(x)+'</p>'};
+var dates=d.dates||[['Application begins',NA],['Last date to apply',NA],['Last date to pay fee',NA],['Exam date',NA],['Admit card',NA],['Result',NA]];
+var fee=d.fee||[['General / OBC / EWS',NA],['SC / ST',NA],['PH (Divyang)',NA]];
+var how=['Open the official website using the button below.','Register with your name, mobile and email.','Fill in the application form.','Upload photo and signature.','Pay the fee.','Submit and download the confirmation page.'];
+var h='';
+if(d.sample||d.demo)h+='<div class="note">Demo data for prototype only. Dates, fees and seats are examples, not real. Verify on the official website.</div>';
+
+h+=s('Short Summary',p(d.sum||('Latest update on '+e.n+' by '+e.o+'. Read all details on the official website and apply only there.')));
+h+=s('Important Dates',t(dates));
+h+=s('Application Fee',t(fee));
+h+=s('Age Limit',p(d.age||NA));
+h+=s('Vacancy Details',p(d.vac||NA));
+h+=s('Eligibility',p(d.el||NA));
+h+=s('How to Apply','<ol>'+how.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ol>');
+h+=s('Selection Process',p(d.sel||NA));
+h+=s('FAQ',p('Where should I apply? Only on the official website of '+e.o+'.')+p('Does ExamSetu ask for money? No. We never ask students for money.'));
+return h;}
+
+function open_(i){
+  var e=EXAMS[i];
+  var items=[["Apply Online",e.p],["Official PDF (Notification)",e.f,"pdf"],["Admit Card",e.a],["Result",e.r],["Answer Key",e.k],["Syllabus",e.s]];
+  var h='<h3>'+esc(e.n)+'</h3><div class="meta">'+esc(e.o)+' · Last verified: '+esc(VERIFIED)+'</div>'+info(e)+'<div class="sec"><h4>Direct Links & Guides</h4></div>';
+  items.forEach(function(it){
+    var L=LOGIN[e.o];
+    if(L&&L.k.indexOf(it[0])>-1){h+='<button class="btn ok" data-i="'+i+'" data-lb="'+esc(it[0])+'">'+esc(it[0])+' – checklist & steps</button>';return}
+    h+= it[1]?'<a class="btn '+(it[2]||'ok')+'" target="_blank" rel="noopener" href="'+esc(it[1])+'">'+it[0]+'</a>'
+             :'<a class="btn off" target="_blank" rel="noopener" href="'+esc(e.u)+'">'+it[0]+' – check on official website</a>';
+  });
+  h+='<a class="btn off2" target="_blank" rel="noopener" href="'+esc(e.u)+'">Official Website</a>';
+  h+='<button class="close" id="x">Close</button>';
+  $("panel").innerHTML=h;$("sheet").classList.add("open");
+  $("x").onclick=function(){$("sheet").classList.remove("open")};
+}
+
+// ===== INLINE STUDENT FORM TOOLS (SAME PAGE, SEPARATE SECTION) =====
+var EXAM_DOCS = {
+  SSC: [
+    {id:"photo", label:"Passport Photo (200x230 px, 20-50 KB)", w:200, h:230, maxKB:48, photo:true},
+    {id:"sign", label:"Signature (140x60 px, 10-20 KB)", w:280, h:120, maxKB:19, photo:false}
+  ],
+  UPSC: [
+    {id:"photo", label:"Passport Photo (350x350 px, 20-300 KB)", w:350, h:350, maxKB:280, photo:true},
+    {id:"sign", label:"Signature (350x150 px, 20-300 KB)", w:350, h:150, maxKB:280, photo:false}
+  ],
+  IBPS: [
+    {id:"photo", label:"Passport Photo (200x230 px, 20-50 KB)", w:200, h:230, maxKB:48, photo:true},
+    {id:"sign", label:"Black Ink Signature (140x60 px, 10-20 KB)", w:280, h:120, maxKB:19, photo:false},
+    {id:"thumb", label:"Left Thumb Impression (240x240 px, 20-50 KB)", w:240, h:240, maxKB:48, photo:false},
+    {id:"decl", label:"Handwritten Declaration (800x400 px, 50-100 KB)", w:800, h:400, maxKB:95, photo:false}
+  ],
+  RRB: [
+    {id:"photo", label:"Passport Photo (320x380 px, 30-70 KB)", w:320, h:380, maxKB:68, photo:true},
+    {id:"sign", label:"Signature (140x60 px, 30-70 KB)", w:280, h:120, maxKB:68, photo:false}
+  ],
+  NTA: [
+    {id:"photo", label:"Passport Photo (200x230 px, 10-200 KB)", w:200, h:230, maxKB:180, photo:true},
+    {id:"postcard", label:"Postcard Photo 4x6 in (400x600 px, 10-200 KB)", w:400, h:600, maxKB:180, photo:true},
+    {id:"sign", label:"Signature (256x64 px, 4-30 KB)", w:256, h:64, maxKB:28, photo:false}
+  ],
+  BPSC: [
+    {id:"photo", label:"Square Photo (250x250 px, 15-25 KB)", w:250, h:250, maxKB:24, photo:true},
+    {id:"sign", label:"Hindi / English Sign (220x100 px, 10-20 KB)", w:220, h:100, maxKB:19, photo:false}
+  ],
+  UPPSC: [
+    {id:"combo", label:"Combined Photo + Sign (150x230 px, <50 KB)", w:150, h:230, maxKB:48, photo:true}
+  ],
+  ARMY: [
+    {id:"photo", label:"Passport Photo (200x230 px, 10-20 KB)", w:200, h:230, maxKB:19, photo:true},
+    {id:"sign", label:"Signature (140x60 px, 5-10 KB)", w:280, h:120, maxKB:9, photo:false}
+  ],
+  CBSE: [
+    {id:"photo", label:"Passport Photo (200x230 px, 10-100 KB)", w:200, h:230, maxKB:95, photo:true},
+    {id:"sign", label:"Signature (140x60 px, 3-30 KB)", w:280, h:120, maxKB:28, photo:false}
+  ]
+};
+
+var AGE_PRESETS = [
+  {min:18, max:30, cut:"2026-08-01"},
+  {min:21, max:32, cut:"2026-08-01"},
+  {min:16.5, max:19.5, cut:"2026-07-02"},
+  {min:19, max:25, cut:"2026-07-01"},
+  {min:18, max:30, cut:"2026-08-01"},
+  {min:18, max:27, cut:"2026-08-01"},
+  {min:20, max:30, cut:"2026-08-01"},
+  {min:20, max:30, cut:"2026-08-01"},
+  {min:18, max:33, cut:"2026-07-01"},
+  {min:21, max:37, cut:"2026-08-01"},
+  {min:17.5, max:21, cut:"2026-10-01"},
+  {min:17, max:99, cut:"2026-12-31"},
+  {min:0, max:99, cut:"2026-08-01"}
+];
+
+function updateDocOptions(){
+  var list = EXAM_DOCS[$("rExam").value] || EXAM_DOCS.SSC;
+  $("rDoc").innerHTML = list.map(function(d, idx){
+    return '<option value="'+idx+'">'+d.label+'</option>';
+  }).join("");
+  $("stampFields").style.display = list[0].photo ? "grid" : "none";
+}
+$("rExam").addEventListener("change", updateDocOptions);
+$("rDoc").addEventListener("change", function(){
+  var list = EXAM_DOCS[$("rExam").value] || EXAM_DOCS.SSC;
+  var p = list[+this.value] || list[0];
+  $("stampFields").style.display = p.photo ? "grid" : "none";
+});
+updateDocOptions();
+
+$("rGen").addEventListener("click", function(){
+  var file = $("rFile").files && $("rFile").files[0];
+  if(!file){ alert("Please select a photo or signature image first."); return; }
+  var list = EXAM_DOCS[$("rExam").value] || EXAM_DOCS.SSC;
+  var p = list[+$("rDoc").value] || list[0];
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var img = new Image();
+    img.onload = function(){
+      var cv = document.createElement("canvas");
+      cv.width = p.w; cv.height = p.h;
+      var ctx = cv.getContext("2d");
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, p.w, p.h);
+
+      var nameTxt = p.photo ? $("rName").value.trim().toUpperCase() : "";
+      var dateTxt = p.photo ? $("rDate").value.trim() : "";
+      var stripH = (nameTxt || dateTxt) ? Math.round(p.h * 0.22) : 0;
+      var imgAreaH = p.h - stripH;
+
+      var scale = Math.min(p.w / img.width, imgAreaH / img.height);
+      var dw = img.width * scale, dh = img.height * scale;
+      ctx.drawImage(img, (p.w - dw)/2, (imgAreaH - dh)/2, dw, dh);
+
+      if(stripH > 0){
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, imgAreaH, p.w, stripH);
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0, imgAreaH); ctx.lineTo(p.w, imgAreaH); ctx.stroke();
+        ctx.fillStyle = "#000000";
+        ctx.textAlign = "center";
+        var fontSize = Math.max(10, Math.round(stripH * 0.36));
+        ctx.font = "bold " + fontSize + "px Arial, sans-serif";
+        if(nameTxt && dateTxt){
+          ctx.fillText(nameTxt, p.w/2, imgAreaH + stripH*0.44, p.w - 8);
+          ctx.fillText("DOP: " + dateTxt, p.w/2, imgAreaH + stripH*0.86, p.w - 8);
+        } else {
+          ctx.fillText(nameTxt || ("DOP: " + dateTxt), p.w/2, imgAreaH + stripH*0.65, p.w - 8);
+        }
+      }
+
+      var q = 0.92, dataUrl = cv.toDataURL("image/jpeg", q);
+      var sizeKB = Math.max(1, Math.round((dataUrl.length * 3 / 4) / 1024));
+      while(sizeKB > p.maxKB && q > 0.12){
+        q -= 0.06;
+        dataUrl = cv.toDataURL("image/jpeg", q);
+        sizeKB = Math.max(1, Math.round((dataUrl.length * 3 / 4) / 1024));
+      }
+
+      var out = $("rOut");
+      out.hidden = false;
+      out.innerHTML = '<img src="'+dataUrl+'" alt="Preview">' +
+        '<div style="margin:6px 0;font-size:12.5px;font-weight:600;color:var(--green)">Ready: '+p.w+'x'+p.h+' px · '+sizeKB+' KB (JPG)</div>' +
+        '<a class="btn off2" href="'+dataUrl+'" download="ExamSetu_'+sizeKB+'KB.jpg">Download Ready JPG</a>';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+$("aPreset").addEventListener("change", function(){
+  var p = AGE_PRESETS[+this.value] || AGE_PRESETS[0];
+  $("aMin").value = p.min;
+  $("aMax").value = p.max;
+  $("aCut").value = p.cut;
+});
+
+$("aCalc").addEventListener("click", function(){
+  var dobVal = $("aDob").value, cutVal = $("aCut").value;
+  if(!dobVal || !cutVal){ alert("Please enter both Date of Birth and Cutoff Date."); return; }
+  var dob = new Date(dobVal + "T00:00:00"), cut = new Date(cutVal + "T00:00:00");
+  if(dob > cut){ $("aOut").innerHTML = '<div class="res-badge res-no">DOB cannot be after the cutoff date.</div>'; return; }
+
+  var yrs = cut.getFullYear() - dob.getFullYear();
+  var mos = cut.getMonth() - dob.getMonth();
+  var days = cut.getDate() - dob.getDate();
+  if(days < 0){
+    mos--;
+    var prevMonth = new Date(cut.getFullYear(), cut.getMonth(), 0);
+    days += prevMonth.getDate();
+  }
+  if(mos < 0){ yrs--; mos += 12; }
+
+  var exactDecimal = yrs + (mos/12) + (days/365.25);
+  var minA = parseFloat($("aMin").value) || 0;
+  var maxA = (parseFloat($("aMax").value) || 100) + (parseInt($("aCat").value, 10) || 0);
+  var ok = (exactDecimal >= minA) && (yrs < maxA || (yrs === maxA && mos === 0 && days === 0));
+
+  $("aOut").innerHTML = '<div class="res-badge '+(ok?'res-ok':'res-no')+'">' +
+    'Age: '+yrs+' Yrs, '+mos+' Mos, '+days+' Days<br>' +
+    '<span style="font-size:12px;font-weight:500">'+(ok ? 'ELIGIBLE ('+minA+' to '+maxA+' yrs)' : 'NOT ELIGIBLE ('+minA+' to '+maxA+' yrs)')+'</span>' +
+  '</div>';
+});
+
+$("pMake").addEventListener("click", function(){
+  var files = Array.prototype.slice.call($("pFiles").files || []).slice(0, 5);
+  if(!files.length){ alert("Please select at least 1 document image."); return; }
+  var maxTotalBytes = (+$("pTarget").value) * 1024;
+  var perImgBytes = Math.floor((maxTotalBytes - 2048) / files.length);
+
+  Promise.all(files.map(function(f){
+    return new Promise(function(resolve){
+      var r = new FileReader();
+      r.onload = function(ev){
+        var im = new Image();
+        im.onload = function(){
+          var maxW = 900, scale = Math.min(1, maxW / im.width);
+          var w = Math.round(im.width * scale), h = Math.round(im.height * scale);
+          var cv = document.createElement("canvas");
+          cv.width = w; cv.height = h;
+          var ctx = cv.getContext("2d");
+          ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0,0,w,h);
+          ctx.drawImage(im, 0, 0, w, h);
+
+          var q = 0.80, dUrl = cv.toDataURL("image/jpeg", q);
+          while((dUrl.length * 0.75) > perImgBytes && q > 0.15){
+            q -= 0.08;
+            dUrl = cv.toDataURL("image/jpeg", q);
+          }
+          var bin = atob(dUrl.split(",")[1]);
+          var bytes = new Uint8Array(bin.length);
+          for(var i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          resolve({bytes:bytes, w:w, h:h});
+        };
+        im.src = ev.target.result;
+      };
+      r.readAsDataURL(f);
+    });
+  })).then(function(pages){
+    var pdfBlob = buildMultiPagePDF(pages);
+    var url = URL.createObjectURL(pdfBlob);
+    var kb = Math.max(1, Math.round(pdfBlob.size / 1024));
+    var out = $("pOut");
+    out.hidden = false;
+    out.innerHTML = '<div style="margin-bottom:6px;font-size:13px;font-weight:600;color:var(--green)">PDF Ready: '+pages.length+' Page(s) · '+kb+' KB</div>' +
+      '<a class="btn off2" href="'+url+'" download="ExamSetu_Document_'+kb+'KB.pdf">Download PDF ('+kb+' KB)</a>';
+  });
+});
+
+function buildMultiPagePDF(pages){
+  var chunks = [], offset = 0, xref = [0];
+  var NL = String.fromCharCode(10);
+  function pushStr(s){
+    var arr = new Uint8Array(s.length);
+    for(var i=0;i<s.length;i++) arr[i] = s.charCodeAt(i) & 0xff;
+    chunks.push(arr); offset += arr.length;
+  }
+  function pushBytes(b){ chunks.push(b); offset += b.length; }
+  function startObj(id){ xref[id] = offset; pushStr(id + " 0 obj" + NL); }
+
+  pushStr("%PDF-1.4" + NL);
+  startObj(1); pushStr("<< /Type /Catalog /Pages 2 0 R >>" + NL + "endobj" + NL);
+
+  var pageIds = [], nextId = 3;
+  pages.forEach(function(){ pageIds.push(nextId); nextId += 3; });
+  startObj(2); pushStr("<< /Type /Pages /Kids [" + pageIds.map(function(id){return id+" 0 R"}).join(" ") + "] /Count " + pages.length + " >>" + NL + "endobj" + NL);
+
+  pages.forEach(function(p, idx){
+    var pId = pageIds[idx], cId = pId + 1, iId = pId + 2;
+    var pw = 595, ph = Math.round(595 * (p.h / p.w));
+    if(ph > 842){ ph = 842; pw = Math.round(842 * (p.w / p.h)); }
+    startObj(pId);
+    pushStr("<< /Type /Page /Parent 2 0 R /Resources << /XObject << /Im0 " + iId + " 0 R >> >> /MediaBox [0 0 " + pw + " " + ph + "] /Contents " + cId + " 0 R >>" + NL + "endobj" + NL);
+    var stream = "q " + pw + " 0 0 " + ph + " 0 0 cm /Im0 Do Q" + NL;
+    startObj(cId);
+    pushStr("<< /Length " + stream.length + " >>" + NL + "stream" + NL + stream + "endstream" + NL + "endobj" + NL);
+    startObj(iId);
+    pushStr("<< /Type /XObject /Subtype /Image /Width " + p.w + " /Height " + p.h + " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + p.bytes.length + " >>" + NL + "stream" + NL);
+    pushBytes(p.bytes);
+    pushStr(NL + "endstream" + NL + "endobj" + NL);
+  });
+
+  var xrefPos = offset;
+  pushStr("xref" + NL + "0 " + nextId + NL + "0000000000 65535 f " + NL);
+  for(var id=1; id<nextId; id++){
+    var pos = String(xref[id]);
+    while(pos.length < 10) pos = "0" + pos;
+    pushStr(pos + " 00000 n " + NL);
+  }
+  pushStr("trailer" + NL + "<< /Size " + nextId + " /Root 1 0 R >>" + NL + "startxref" + NL + xrefPos + NL + "%%EOF");
+  return new Blob(chunks, {type: "application/pdf"});
+}
+
+$("chips").addEventListener("click",function(ev){var c=ev.target.getAttribute("data-c");if(c){cat=c;chips();list()}});
+$("grid").addEventListener("click",function(ev){var b=ev.target.closest(".card");if(b)open_(+b.getAttribute("data-i"))});
+function doSearch(){term=$("q").value;if(term.trim()&&cat!=="All"){cat="All";chips()}list()}
+["input","keyup","search","change"].forEach(function(n){$("q").addEventListener(n,doSearch)});
+$("q").addEventListener("keydown",function(ev){if(ev.key==="Enter"){ev.preventDefault();this.blur();$("grid").scrollIntoView({behavior:"smooth"})}});
+$("sheet").addEventListener("click",function(ev){if(ev.target===this)this.classList.remove("open")});
+$("panel").addEventListener("click",function(ev){var b=ev.target.closest("[data-lb]");if(b)pop(EXAMS[+b.getAttribute("data-i")],b.getAttribute("data-lb"))});
+$("pop").addEventListener("click",function(ev){if(ev.target===this)this.classList.remove("open")});
+chips();list();
+
+// ===== AUTO-SYNC FROM GOOGLE SHEET IF LINK IS PROVIDED =====
+if (SHEET_CSV_URL) {
+  fetch(SHEET_CSV_URL)
+    .then(function(res) { return res.text(); })
+    .then(function(csv) {
+      var rows = csv.trim().split(/\r?\n/).map(function(row) {
+        return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(function(cell) {
+          return cell.replace(/^"|"$/g, '').trim();
+        });
+      });
+      var headers = rows.shift();
+      var liveExams = rows.map(function(row) {
+        var obj = {};
+        headers.forEach(function(h, idx) { if (row[idx]) obj[h] = row[idx]; });
+        return obj;
+      }).filter(function(item) { return item.n && item.u; });
+      if (liveExams.length > 0) {
+        EXAMS = liveExams;
+        chips();
+        list();
+      }
+    })
+    .catch(function() {});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>ExamSetu &amp; Toolkit – Every exam update. One trusted place.</title>
+    <meta name="description" content="One trusted place for UPSC, SSC, Banking, Railway, Defence and State exam dates, admit cards, answer keys, results, plus offline photo resizer, age calculator and PDF compressor." />
+    <meta property="og:title" content="ExamSetu &amp; Toolkit – Every exam update. One trusted place." />
+    <meta property="og:description" content="One trusted place for UPSC, SSC, Banking, Railway, Defence and State exam dates, admit cards, answer keys, results, plus offline photo resizer, age calculator and PDF compressor." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+      #et-splash,
+      #et-splash *,
+      #et-splash *::before,
+      #et-splash *::after {
+        box-sizing: border-box;
+      }
+
+      #et-splash {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        max-width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        z-index: 9999;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background:
+          radial-gradient(circle at 50% 42%, rgba(245, 158, 11, 0.16) 0%, rgba(136, 19, 55, 0.24) 34%, rgba(11, 15, 25, 0) 68%),
+          linear-gradient(145deg, #0b0f19 0%, #3b0719 52%, #130712 100%);
+        color: #f8fafc;
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        opacity: 1;
+        transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+          transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+          visibility 0.45s ease;
+      }
+
+      #et-splash.et-splash--hide {
+        opacity: 0;
+        transform: scale(1.02);
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .et-splash-glow {
+        position: absolute;
+        width: min(380px, 82vw);
+        height: min(380px, 82vw);
+        border-radius: 9999px;
+        background: radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, rgba(245, 158, 11, 0.05) 48%, transparent 72%);
+        filter: blur(22px);
+        pointer-events: none;
+        animation: etGlowPulse 2.4s ease-in-out infinite alternate;
+      }
+
+      .et-splash-skip {
+        position: absolute;
+        top: max(16px, env(safe-area-inset-top));
+        right: max(16px, env(safe-area-inset-right));
+        z-index: 2;
+        padding: 6px 14px;
+        border-radius: 9999px;
+        border: 1px solid rgba(251, 191, 36, 0.32);
+        background: rgba(11, 15, 25, 0.55);
+        backdrop-filter: blur(8px);
+        color: #fde68a;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+      }
+
+      .et-splash-skip:hover,
+      .et-splash-skip:focus-visible {
+        background: rgba(245, 158, 11, 0.18);
+        border-color: rgba(251, 191, 36, 0.72);
+        color: #ffffff;
+        outline: none;
+      }
+
+      .et-splash-skip:active {
+        transform: scale(0.96);
+      }
+
+      .et-splash-card {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 460px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 14px;
+        animation: etEntrance 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .et-splash-emblem-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 18px 10px 10px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(245, 158, 11, 0.28);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42), 0 0 28px rgba(245, 158, 11, 0.16);
+      }
+
+      .et-splash-monogram {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 55%, #d97706 100%);
+        color: #4c0519;
+        font-weight: 900;
+        font-size: 19px;
+        letter-spacing: -0.03em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 18px rgba(245, 158, 11, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        flex-shrink: 0;
+      }
+
+      .et-splash-brand {
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: #ffffff;
+        line-height: 1.1;
+      }
+
+      .et-splash-brand span {
+        color: #fbbf24;
+      }
+
+      .et-splash-title {
+        margin: 6px 0 0;
+        font-size: clamp(22px, 5.4vw, 32px);
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
+        background: linear-gradient(90deg, #fde68a 0%, #fbbf24 45%, #f59e0b 75%, #fef3c7 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        opacity: 0;
+        animation: etTextRise 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.18s forwards;
+      }
+
+      .et-splash-subtitle {
+        margin: 0;
+        font-size: clamp(13px, 3.4vw, 15px);
+        font-weight: 500;
+        color: rgba(254, 205, 211, 0.88);
+        letter-spacing: 0.01em;
+        opacity: 0;
+        animation: etTextRise 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.32s forwards;
+      }
+
+      .et-splash-loader {
+        position: absolute;
+        bottom: max(28px, env(safe-area-inset-bottom));
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(220px, 68vw);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        z-index: 1;
+        opacity: 0;
+        animation: etFadeOnly 0.45s ease 0.25s forwards;
+      }
+
+      .et-splash-bar-track {
+        width: 100%;
+        height: 3px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.12);
+        overflow: hidden;
+      }
+
+      .et-splash-bar-fill {
+        width: 100%;
+        height: 100%;
+        border-radius: 9999px;
+        background: linear-gradient(90deg, #d97706 0%, #fbbf24 60%, #fef08a 100%);
+        box-shadow: 0 0 10px rgba(251, 191, 36, 0.65);
+        transform-origin: left center;
+        transform: scaleX(0);
+        animation: etProgressFill 1.75s cubic-bezier(0.35, 0.05, 0.25, 1) forwards;
+      }
+
+      .et-splash-dots {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .et-splash-dots span {
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background: #fbbf24;
+        opacity: 0.35;
+        animation: etDotPulse 1.1s ease-in-out infinite;
+      }
+
+      .et-splash-dots span:nth-child(2) {
+        animation-delay: 0.18s;
+      }
+
+      .et-splash-dots span:nth-child(3) {
+        animation-delay: 0.36s;
+      }
+
+      @keyframes etEntrance {
+        0% {
+          opacity: 0;
+          transform: translateY(10px) scale(0.92);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes etTextRise {
+        0% {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes etFadeOnly {
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes etProgressFill {
+        0% {
+          transform: scaleX(0.06);
+        }
+        100% {
+          transform: scaleX(1);
+        }
+      }
+
+      @keyframes etDotPulse {
+        0%,
+        100% {
+          opacity: 0.35;
+          transform: scale(0.85);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.15);
+        }
+      }
+
+      @keyframes etGlowPulse {
+        0% {
+          opacity: 0.72;
+          transform: scale(0.96);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1.06);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .et-splash-card,
+        .et-splash-title,
+        .et-splash-subtitle,
+        .et-splash-loader,
+        .et-splash-bar-fill,
+        .et-splash-glow,
+        .et-splash-dots span {
+          animation: none !important;
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-[#0b0f19] text-slate-100 antialiased selection:bg-amber-100 selection:text-amber-900">
+    <div id="et-splash" role="dialog" aria-modal="true" aria-label="Welcome to ExamSetu &amp; Toolkit">
+      <div class="et-splash-glow" aria-hidden="true"></div>
+      <button type="button" id="et-splash-skip" class="et-splash-skip" aria-label="Skip welcome screen">
+        Skip &rarr;
+      </button>
+
+      <div class="et-splash-card">
+        <div class="et-splash-emblem-wrap">
+          <div class="et-splash-monogram" aria-hidden="true">ET</div>
+          <div class="et-splash-brand">Exam<span>Setu</span></div>
+        </div>
+        <h1 class="et-splash-title">Welcome to ExamSetu &amp; Toolkit</h1>
+        <p class="et-splash-subtitle">Every exam update. One trusted place.</p>
+      </div>
+
+      <div class="et-splash-loader" aria-hidden="true">
+        <div class="et-splash-bar-track">
+          <div class="et-splash-bar-fill"></div>
+        </div>
+        <div class="et-splash-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="root"></div>
+
+    <script>
+      (function () {
+        var splash = document.getElementById('et-splash');
+        var skipBtn = document.getElementById('et-splash-skip');
+        if (!splash) return;
+
+        var dismissed = false;
+        var autoTimer = null;
+
+        function dismissSplash() {
+          if (dismissed) return;
+          dismissed = true;
+          if (autoTimer) clearTimeout(autoTimer);
+          splash.classList.add('et-splash--hide');
+          setTimeout(function () {
+            if (splash && splash.parentNode) {
+              splash.parentNode.removeChild(splash);
+            }
+          }, 480);
+        }
+
+        if (skipBtn) {
+          skipBtn.addEventListener('click', dismissSplash);
+        }
+
+        document.addEventListener('keydown', function onSplashKey(e) {
+          if (e.key === 'Escape') {
+            dismissSplash();
+            document.removeEventListener('keydown', onSplashKey);
+          }
+        });
+
+        autoTimer = setTimeout(dismissSplash, 1800);
+      })();
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

@@ -1,0 +1,8 @@
+{
+  "name": "ExamSetu – Government Exam Updates & Student Tools",
+  "description": "One trusted place for UPSC, SSC, Banking, Railway, Defence and State exam dates, admit cards, answer keys, results, plus offline photo resizer, age calculator and PDF compressor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

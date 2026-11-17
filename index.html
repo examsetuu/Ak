@@ -4474,9 +4474,6 @@
     check: '<path d="M20 6 9 17l-5-5"/>',
     bot: '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
     user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
-    key: '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
-    eye: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
-    eyeOff: '<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>',
   };
 
   function icon(name, cls, filled) {
@@ -4620,26 +4617,6 @@
     }
   }
 
-  function loadSavedGeminiKey() {
-    try {
-      return (localStorage.getItem('examsetu_gemini_api_key') || '').trim();
-    } catch {
-      return '';
-    }
-  }
-
-  function saveGeminiKeyToStorage(keyVal) {
-    const clean = String(keyVal || '').trim();
-    try {
-      if (clean) {
-        localStorage.setItem('examsetu_gemini_api_key', clean);
-      } else {
-        localStorage.removeItem('examsetu_gemini_api_key');
-      }
-    } catch {}
-    return clean;
-  }
-
   const state = {
     exams: DATA.INITIAL_EXAMS.slice(),
     selectedCategory: 'All',
@@ -4675,11 +4652,6 @@
     chatInput: '',
     chatLoading: false,
     copiedChatId: null,
-    geminiApiKey: loadSavedGeminiKey(),
-    isKeyPanelOpen: false,
-    keyInputDraft: '',
-    keyPanelMsg: '',
-    showKeyPlain: false,
     resizer: {
       exam: 'SSC',
       docIndex: 0,
@@ -7182,105 +7154,6 @@
     return { text: lines.join('\n'), sources: dedupSources.slice(0, 6) };
   }
 
-  function callBrowserGeminiApi(apiKey, apiMessages, roleMode, lang) {
-    const cleanKey = String(apiKey || '').trim();
-    const isHindi = lang === 'hi';
-    const docSummary = Object.keys(DATA.EXAM_DOCS_DATA).map(function (k) {
-      return k + ': ' + DATA.EXAM_DOCS_DATA[k].map(function (d) { return d.label; }).join(', ');
-    }).join(' | ');
-
-    let roleDirective = '';
-    if (roleMode === 'strategy_coach') {
-      roleDirective = 'Role: Study Strategy & Syllabus Coach. Provide structured 30-day revision plans, subject weightage, and realistic expected cutoffs.';
-    } else if (roleMode === 'quick_tutor') {
-      roleDirective = 'Role: Fast Exam & Form Helper. Give concise, bullet-point answers on dates, age eligibility, and exact Photo/Signature KB specs.';
-    } else {
-      roleDirective = 'Role: Live Exam Search Advisor. Provide accurate exam updates, admit card, answer key, result status and key official timelines.';
-    }
-
-    const systemInstructionText =
-      'You are the ExamSetu & Toolkit AI Assistant for Indian Government & Entrance Exams (UPSC, SSC, Banking/IBPS/SBI, Railways/RRB, BPSC, BSSC, UPPSC, NTA NEET/JEE/CUET, State PSCs). ' +
-      'Verified portal date reference: ' + DATA.VERIFIED_DATE + '. ' +
-      roleDirective + ' ' +
-      'Verified local Student Toolkit form document specs: ' + docSummary + '. ' +
-      (isHindi
-        ? 'Respond clearly in Hindi (Devanagari) with concise markdown headings and bullet points.'
-        : 'Respond clearly in English with concise markdown headings and bullet points.') +
-      ' Always remind students to verify final dates on official commission portals.';
-
-    const contents = apiMessages.slice(-10).map(function (m) {
-      return {
-        role: m.role === 'model' ? 'model' : 'user',
-        parts: [{ text: String(m.text || '') }],
-      };
-    });
-
-    function runAttempt(modelName, useSearchTool) {
-      const endpoint =
-        'https://generativelanguage.googleapis.com/v1beta/models/' +
-        encodeURIComponent(modelName) +
-        ':generateContent?key=' +
-        encodeURIComponent(cleanKey);
-
-      const payload = {
-        systemInstruction: { parts: [{ text: systemInstructionText }] },
-        contents: contents,
-        generationConfig: {
-          temperature: roleMode === 'search_advisor' ? 0.25 : 0.45,
-          maxOutputTokens: 1400,
-        },
-      };
-      if (useSearchTool) {
-        payload.tools = [{ google_search: {} }];
-      }
-
-      return fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      }).then(function (res) {
-        return res.json().catch(function () { return {}; }).then(function (data) {
-          if (!res.ok) {
-            const errMsg = (data && data.error && data.error.message) || ('HTTP ' + res.status);
-            const err = new Error(errMsg);
-            err.status = res.status;
-            throw err;
-          }
-          const cand = data && data.candidates && data.candidates[0];
-          const parts = cand && cand.content && cand.content.parts ? cand.content.parts : [];
-          const text = parts.map(function (p) { return p.text || ''; }).join('\n').trim();
-          if (!text) throw new Error('Empty AI response');
-
-          const sources = [];
-          const seen = {};
-          const chunks = (cand && cand.groundingMetadata && cand.groundingMetadata.groundingChunks) || [];
-          chunks.forEach(function (ch) {
-            if (ch && ch.web && ch.web.uri && !seen[ch.web.uri]) {
-              seen[ch.web.uri] = true;
-              sources.push({ title: ch.web.title || 'Web Source', uri: ch.web.uri });
-            }
-          });
-          return {
-            reply: text,
-            sources: sources.slice(0, 6),
-            modelUsed: modelName + (useSearchTool ? ' (Browser Key + Search)' : ' (Browser Key)'),
-          };
-        });
-      });
-    }
-
-    const trySearch = roleMode !== 'quick_tutor';
-    return runAttempt('gemini-2.5-flash', trySearch).catch(function (err) {
-      if (trySearch && err && err.status === 400) {
-        return runAttempt('gemini-2.5-flash', false);
-      }
-      if (err && (err.status === 404 || err.status === 429 || err.status === 503)) {
-        return runAttempt('gemini-2.0-flash', false);
-      }
-      throw err;
-    });
-  }
-
   function renderFormattedLine(line) {
     const tokenRegex = /(\[[^\]]+\]\(https?:\/\/[^)\s]+\)|\*\*[^*]+\*\*|\*[^*\n]+\*|`[^`]+`)/g;
     let out = '';
@@ -7411,8 +7284,6 @@
 
     const hi = state.language === 'hi';
     const activeRoleMeta = CHAT_ROLES.find(function (r) { return r.id === state.chatRoleMode; }) || CHAT_ROLES[0];
-    const hasPersonalKey = Boolean(state.geminiApiKey && state.geminiApiKey.trim());
-    const keyDraftVal = state.keyInputDraft || state.geminiApiKey || '';
 
     mount.innerHTML =
       '<div data-backdrop="chat" class="fixed inset-0 z-50 bg-black/65 flex items-end sm:items-center justify-center p-0 sm:p-4">' +
@@ -7422,17 +7293,10 @@
       '<div class="flex items-center gap-2.5">' +
       '<div class="w-9 h-9 rounded-xl bg-amber-500 text-rose-950 flex items-center justify-center shadow-xs shrink-0">' + icon('sparkles', 'w-5 h-5') + '</div>' +
       '<div>' +
-      '<h2 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2 flex-wrap"><span>ExamSetu &amp; Toolkit AI</span>' +
-      '<span id="chat-role-badge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30">' + esc(activeRoleMeta.badge) + '</span>' +
-      (hasPersonalKey ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-200 border border-emerald-500/30">' + esc(hi ? 'लाइव कुंजी सक्रिय' : 'Key Active') + '</span>' : '') +
-      '</h2>' +
+      '<h2 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2"><span>ExamSetu &amp; Toolkit AI</span>' +
+      '<span id="chat-role-badge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30">' + esc(activeRoleMeta.badge) + '</span></h2>' +
       '<p id="chat-role-desc" class="text-[11px] sm:text-xs text-rose-200/90">' + esc(hi ? activeRoleMeta.descHi : activeRoleMeta.descEn) + '</p></div></div>' +
       '<div class="flex items-center gap-1.5">' +
-      '<button type="button" id="chat-key-btn" data-action="toggle-key-panel" class="p-2 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ' +
-      (state.isKeyPanelOpen ? 'bg-amber-500 text-rose-950' : hasPersonalKey ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 hover:bg-white/20' : 'bg-white/10 hover:bg-white/20 text-amber-200 hover:text-white') + '" title="' + esc(hi ? 'वैकल्पिक Gemini API कुंजी सेटिंग्स (ब्राउज़र में सुरक्षित)' : 'Optional Gemini API Key Settings (saved locally in browser)') + '" aria-label="Gemini API Key Settings">' +
-      icon('key', 'w-4 h-4') +
-      (hasPersonalKey ? '<span class="w-2 h-2 rounded-full bg-emerald-500"></span>' : '') +
-      '</button>' +
       '<button type="button" id="chat-clear-btn" data-action="chat-clear" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-rose-100 hover:text-white transition-colors cursor-pointer ' + (state.chatMessages.length ? '' : 'hidden') + '" title="' + esc(hi ? 'चैट साफ़ करें' : 'Clear conversation') + '">' + icon('trash2', 'w-4 h-4') + '</button>' +
       '<button type="button" data-action="close-chat" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer" aria-label="Close AI Assistant">' + icon('x', 'w-5 h-5') + '</button>' +
       '</div></div>' +
@@ -7443,24 +7307,7 @@
           (isSel ? 'bg-amber-500 text-rose-950 shadow-xs' : 'bg-white/10 text-rose-100 hover:bg-white/20') + '">' +
           icon(opt.icon, 'w-3.5 h-3.5') + '<span>' + esc(hi ? opt.labelHi : opt.labelEn) + '</span></button>';
       }).join('') +
-      '</div>' +
-      (state.isKeyPanelOpen
-        ? '<div id="chat-key-panel" class="mt-3 pt-3 border-t border-amber-500/30 space-y-2 text-xs">' +
-          '<div class="flex items-center justify-between gap-2 flex-wrap">' +
-          '<span class="font-bold text-amber-300">' + esc(hi ? 'वैकल्पिक Gemini API कुंजी (केवल इस ब्राउज़र के localStorage में सुरक्षित)' : 'Optional Gemini API Key (Stored only in this browser\'s localStorage)') + '</span>' +
-          '<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="text-[11px] text-amber-200 underline hover:text-white">' + esc(hi ? 'मुफ़्त कुंजी प्राप्त करें' : 'Get free Gemini key') + '</a>' +
-          '</div>' +
-          '<div class="flex items-center gap-1.5">' +
-          '<input id="chat-key-input" type="' + (state.showKeyPlain ? 'text' : 'password') + '" autocomplete="off" spellcheck="false" value="' + esc(keyDraftVal) + '" placeholder="' + esc(hi ? 'अपनी Gemini API कुंजी यहाँ पेस्ट करें (AIza...)' : 'Paste your Gemini API key here (optional)...') + '" class="flex-1 min-w-0 rounded-lg border border-amber-500/30 bg-slate-900 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500" />' +
-          '<button type="button" data-action="toggle-key-vis" class="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-rose-100 cursor-pointer shrink-0" title="' + esc(hi ? 'दिखाएं / छिपाएं' : 'Show / Hide key') + '">' + icon(state.showKeyPlain ? 'eyeOff' : 'eye', 'w-4 h-4') + '</button>' +
-          '<button type="button" data-action="save-gemini-key" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-rose-950 font-bold cursor-pointer shrink-0">' + esc(hi ? 'सहेजें' : 'Save') + '</button>' +
-          (hasPersonalKey ? '<button type="button" data-action="clear-gemini-key" class="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-rose-200 hover:text-white font-bold cursor-pointer shrink-0">' + esc(hi ? 'हटाएं' : 'Remove') + '</button>' : '') +
-          '</div>' +
-          '<p class="text-[11px] text-rose-200/90">' +
-          esc(state.keyPanelMsg || (hi ? 'कोई निजी कुंजी कोड में सेव नहीं की जाती। बिना कुंजी के भी ऑफलाइन सत्यापित कैटलॉग 100% कार्य करता है।' : 'No private key is exposed in public code. Without a key, the upgraded Offline Verified Catalog handles all exam queries seamlessly.')) +
-          '</p></div>'
-        : '') +
-      '</div>' +
+      '</div></div>' +
       '<div id="chat-thread-body" class="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-4 bg-slate-50/70 dark:bg-slate-950/60"></div>' +
       '<form id="chat-form" class="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">' +
       '<div class="flex items-end gap-2">' +
@@ -7471,25 +7318,6 @@
       '</form></div></div>';
 
     renderChatThreadOnly();
-
-    const keyInp = document.getElementById('chat-key-input');
-    if (keyInp) {
-      keyInp.addEventListener('input', function (e) {
-        state.keyInputDraft = e.target.value;
-      });
-      keyInp.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          const val = (keyInp.value || '').trim();
-          state.geminiApiKey = saveGeminiKeyToStorage(val);
-          state.keyInputDraft = state.geminiApiKey;
-          state.keyPanelMsg = state.geminiApiKey
-            ? (hi ? 'कुंजी आपके ब्राउज़र में सुरक्षित सहेजी गई! अब लाइव Gemini AI उत्तर सक्रिय हैं।' : 'API key saved locally in your browser! Live Gemini AI answers are now enabled.')
-            : (hi ? 'कुंजी हटाई गई। ऑफलाइन सत्यापित कैटलॉग सक्रिय है।' : 'Key cleared. Using Offline Verified Catalog.');
-          renderChatModal();
-        }
-      });
-    }
 
     const inp = document.getElementById('chat-input');
     const form = document.getElementById('chat-form');
@@ -7511,9 +7339,7 @@
           sendChatMessage(state.chatInput);
         }
       });
-      if (!state.isKeyPanelOpen) {
-        setTimeout(function () { inp.focus(); }, 80);
-      }
+      setTimeout(function () { inp.focus(); }, 80);
     }
     if (form) {
       form.addEventListener('submit', function (e) {
@@ -7558,41 +7384,17 @@
       .filter(function (m) { return !m.isError; })
       .map(function (m) { return { role: m.role, text: m.text }; });
 
-    const personalKey = (state.geminiApiKey || '').trim();
     const isStaticHost =
       window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
 
     if (isStaticHost) {
-      if (personalKey) {
-        callBrowserGeminiApi(personalKey, apiMessages, activeRole, state.language)
-          .then(function (out) {
-            state.chatMessages.push({
-              id: 'gm_' + Date.now(),
-              role: 'model',
-              text: out.reply,
-              sources: out.sources || [],
-              modelUsed: out.modelUsed,
-            });
-          })
-          .catch(function (err) {
-            const note = hi
-              ? 'लाइव Gemini कुंजी से उत्तर नहीं मिल सका (' + (err && err.message ? err.message : 'Network/Quota') + ') — सत्यापित ऑफलाइन कैटलॉग से उत्तर दिखाया जा रहा है।'
-              : 'Live Gemini key call could not complete (' + (err && err.message ? err.message : 'Network/Quota') + ') — showing tailored answer from Local Verified Catalog.';
-            pushLocalFallbackMessage(trimmed, '', note, activeRole);
-          })
-          .finally(function () {
-            state.chatLoading = false;
-            renderChatThreadOnly();
-            if (sendBtn) sendBtn.disabled = !state.chatInput.trim();
-          });
-        return;
-      }
-
       setTimeout(function () {
-        const offlineNote = hi
-          ? 'ऑफलाइन सत्यापित कैटलॉग मोड — लाइव AI वेब सर्च के लिए ऊपर Key आइकन में अपनी वैकल्पिक Gemini कुंजी जोड़ें।'
-          : 'Offline Verified Catalog Mode — Optionally add your own Gemini API key via the Key icon above for live AI web search.';
-        pushLocalFallbackMessage(trimmed, '', offlineNote, activeRole);
+        pushLocalFallbackMessage(
+          trimmed,
+          '',
+          hi ? 'सत्यापित ऑफलाइन कैटलॉग सहायक' : 'Verified Local Catalog Assistant',
+          activeRole
+        );
         state.chatLoading = false;
         renderChatThreadOnly();
         if (sendBtn) sendBtn.disabled = !state.chatInput.trim();
@@ -7626,56 +7428,20 @@
             modelUsed: data.modelUsed,
             fallbackNote: data.fallbackNote,
           });
-          return null;
-        }
-        if (personalKey) {
-          return callBrowserGeminiApi(personalKey, apiMessages, activeRole, state.language)
-            .then(function (browserOut) {
-              state.chatMessages.push({
-                id: 'gm_' + Date.now(),
-                role: 'model',
-                text: browserOut.reply,
-                sources: browserOut.sources || [],
-                modelUsed: browserOut.modelUsed,
-              });
-            })
-            .catch(function (err) {
-              pushLocalFallbackMessage(
-                trimmed,
-                '',
-                (err && err.message) || (data && data.error) || undefined,
-                activeRole
-              );
-            });
+          return;
         }
         pushLocalFallbackMessage(
           trimmed,
           '',
-          (data && data.error) || (hi ? 'स्थानीय सत्यापित कैटलॉग से सटीक उत्तर:' : 'Tailored answer from Local Verified Catalog:'),
+          (data && data.error) || (hi ? 'स्थानीय सत्यापित कैटलॉग से उत्तर:' : 'Tailored answer from Local Verified Catalog:'),
           activeRole
         );
-        return null;
       })
       .catch(function () {
-        if (personalKey) {
-          return callBrowserGeminiApi(personalKey, apiMessages, activeRole, state.language)
-            .then(function (browserOut) {
-              state.chatMessages.push({
-                id: 'gm_' + Date.now(),
-                role: 'model',
-                text: browserOut.reply,
-                sources: browserOut.sources || [],
-                modelUsed: browserOut.modelUsed,
-              });
-            })
-            .catch(function () {
-              pushLocalFallbackMessage(trimmed, '', undefined, activeRole);
-            });
-        }
         pushLocalFallbackMessage(
           trimmed,
           '',
-          hi ? 'ऑफलाइन सत्यापित कैटलॉग से उत्तर:' : 'Offline Local Verified Catalog Response:',
+          hi ? 'सत्यापित स्थानीय कैटलॉग से उत्तर:' : 'Verified Local Catalog Response:',
           activeRole
         );
       })
@@ -7755,42 +7521,8 @@
     if (action === 'open-sheet') { state.isSheetSyncOpen = true; renderSheetSyncModal(); return; }
     if (action === 'close-sheet') { state.isSheetSyncOpen = false; renderSheetSyncModal(); return; }
     if (action === 'open-chat') { state.isChatOpen = true; renderChatModal(); renderFloatingAiButton(); return; }
-    if (action === 'close-chat') { state.isChatOpen = false; state.isKeyPanelOpen = false; state.keyPanelMsg = ''; renderChatModal(); renderFloatingAiButton(); return; }
+    if (action === 'close-chat') { state.isChatOpen = false; renderChatModal(); renderFloatingAiButton(); return; }
     if (action === 'chat-clear') { state.chatMessages = []; renderChatThreadOnly(); return; }
-    if (action === 'toggle-key-panel') {
-      state.isKeyPanelOpen = !state.isKeyPanelOpen;
-      state.keyInputDraft = state.geminiApiKey || '';
-      state.keyPanelMsg = '';
-      renderChatModal();
-      return;
-    }
-    if (action === 'toggle-key-vis') {
-      const kInp = document.getElementById('chat-key-input');
-      if (kInp) state.keyInputDraft = kInp.value;
-      state.showKeyPlain = !state.showKeyPlain;
-      renderChatModal();
-      return;
-    }
-    if (action === 'save-gemini-key') {
-      const kInp = document.getElementById('chat-key-input');
-      const hi = state.language === 'hi';
-      const val = kInp ? kInp.value : state.keyInputDraft;
-      state.geminiApiKey = saveGeminiKeyToStorage(val);
-      state.keyInputDraft = state.geminiApiKey;
-      state.keyPanelMsg = state.geminiApiKey
-        ? (hi ? 'कुंजी आपके ब्राउज़र में सुरक्षित सहेजी गई! अब लाइव Gemini AI उत्तर सक्रिय हैं।' : 'API key saved locally in your browser! Live Gemini AI answers are now enabled.')
-        : (hi ? 'कुंजी हटाई गई। ऑफलाइन सत्यापित कैटलॉग सक्रिय है।' : 'Key cleared. Using Offline Verified Catalog.');
-      renderChatModal();
-      return;
-    }
-    if (action === 'clear-gemini-key') {
-      const hi = state.language === 'hi';
-      state.geminiApiKey = saveGeminiKeyToStorage('');
-      state.keyInputDraft = '';
-      state.keyPanelMsg = hi ? 'ब्राउज़र से API कुंजी हटाई गई। ऑफलाइन सत्यापित कैटलॉग सक्रिय है।' : 'API key removed from browser storage. Offline Verified Catalog is active.';
-      renderChatModal();
-      return;
-    }
     if (action === 'toggle-only-bookmarked') { state.onlyBookmarked = !state.onlyBookmarked; renderFiltersAndGrid(); return; }
     if (action === 'clear-filters') {
       state.searchTerm = '';

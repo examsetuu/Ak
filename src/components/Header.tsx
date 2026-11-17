@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <button
                     type="button"
                     onClick={onScrollToTools}
-                    className="text-xs sm:text-base font-bold text-amber-200 hover:text-amber-100 hover:bg-amber-400/20 active:bg-amber-400/30 active:scale-95 px-1 sm:px-1.5 py-0.5 rounded-md underline decoration-amber-400/40 underline-offset-4 hover:decoration-amber-200 transition-all cursor-pointer truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                    className="text-[14px] sm:text-xl font-black tracking-tight text-amber-200 hover:text-amber-100 hover:bg-amber-400/20 active:bg-amber-400/30 active:scale-95 px-1 sm:px-1.5 py-0.5 rounded-md underline decoration-amber-400/40 underline-offset-4 hover:decoration-amber-200 transition-all cursor-pointer truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                     title={
                       language === 'hi'
                         ? 'स्टूडेंट टूलकिट (फोटो रीसाइज़र, PDF व आयु कैलकुलेटर) पर जाएं'

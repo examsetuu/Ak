@@ -35,9 +35,9 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Col 1: About & Contact Quick Info */}
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <span className="text-lg font-black text-white">
+              <span className="text-lg font-black tracking-tight text-white">
                 Exam<span className="text-amber-400">Setu</span>{' '}
-                <span className="text-sm font-bold text-amber-200">&amp; Toolkit</span>
+                <span className="text-base sm:text-lg font-black text-amber-200">&amp; Toolkit</span>
               </span>
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800">
                 {t.verifiedBadge}

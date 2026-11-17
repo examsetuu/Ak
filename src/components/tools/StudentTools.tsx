@@ -310,7 +310,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ language }) => {
                 1
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
                   {t.tool1Title}
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -458,7 +458,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ language }) => {
                 2
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
                   {t.tool2Title}
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -633,7 +633,7 @@ export const StudentTools: React.FC<StudentToolsProps> = ({ language }) => {
                 3
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
                   {t.tool3Title}
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">

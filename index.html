@@ -4217,10 +4217,17 @@
         .et-splash-loader,
         .et-splash-bar-fill,
         .et-splash-glow,
-        .et-splash-dots span {
+        .et-splash-dots span,
+        .et-ticker-track {
           animation: none !important;
           opacity: 1 !important;
           transform: none !important;
+        }
+        .et-ticker-item[aria-hidden="true"] {
+          display: none;
+        }
+        .et-ticker-viewport {
+          overflow-x: auto;
         }
       }
 
@@ -4300,6 +4307,194 @@
         }
       }
 
+      /* Mobile Above-the-Fold Compaction */
+      .et-main-compact {
+        padding: 0.5rem 0.75rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .et-exams-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .et-header-inner {
+        padding: 0.45rem 0.75rem;
+      }
+      .et-mobile-nav {
+        gap: 0.35rem;
+        padding-top: 0.35rem;
+        margin-top: 0.35rem;
+      }
+      .et-mobile-nav-pill {
+        min-height: 30px;
+        padding: 0.2rem 0.55rem;
+        font-size: 0.7rem;
+      }
+      .et-spotlight-strip {
+        min-height: 34px;
+        max-height: 46px;
+        padding: 0.3rem 0.5rem 0.3rem 0.65rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      .et-spotlight-strip p {
+        margin: 0;
+      }
+      @keyframes et-ticker-scroll {
+        0% {
+          transform: translate3d(0, 0, 0);
+        }
+        100% {
+          transform: translate3d(-50%, 0, 0);
+        }
+      }
+      .et-ticker-viewport {
+        flex: 1 1 0%;
+        min-width: 0;
+        overflow: hidden;
+        position: relative;
+        -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 12px, #000 calc(100% - 12px), transparent 100%);
+        mask-image: linear-gradient(to right, transparent 0%, #000 12px, #000 calc(100% - 12px), transparent 100%);
+      }
+      .et-ticker-track {
+        display: flex;
+        align-items: center;
+        width: max-content;
+        will-change: transform;
+        animation: et-ticker-scroll 20s linear infinite;
+      }
+      .et-ticker-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding-left: 0.4rem;
+        padding-right: 1.75rem;
+      }
+      .et-ticker-sep {
+        display: inline-block;
+        width: 4px;
+        height: 4px;
+        border-radius: 9999px;
+        background: #f59e0b;
+        opacity: 0.85;
+        flex-shrink: 0;
+      }
+      .et-ticker-viewport:hover .et-ticker-track,
+      .et-ticker-viewport:active .et-ticker-track,
+      .et-ticker-viewport:focus-within .et-ticker-track,
+      .et-spotlight-strip:hover .et-ticker-track,
+      .et-spotlight-strip:active .et-ticker-track {
+        animation-play-state: paused;
+      }
+      .et-spotlight-close {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        min-height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.45rem;
+        flex-shrink: 0;
+      }
+      .et-spotlight-close:hover {
+        background: rgba(245, 158, 11, 0.16);
+      }
+      .et-search-icon {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        padding-left: 0.85rem;
+        display: flex;
+        align-items: center;
+        pointer-events: none;
+      }
+      .et-search-compact {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        padding-left: 2.75rem;
+        padding-right: 2.5rem;
+        min-height: 42px;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+      .et-search-compact::-webkit-search-decoration,
+      .et-search-compact::-webkit-search-cancel-button {
+        -webkit-appearance: none;
+        appearance: none;
+      }
+      .et-filter-compact {
+        padding: 0.55rem 0.7rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+      }
+      .et-filter-row {
+        padding-top: 0.4rem;
+        border-top: 1px solid rgba(148, 163, 184, 0.16);
+      }
+      .et-compact-chip {
+        min-height: 30px;
+        padding: 0.22rem 0.6rem;
+        line-height: 1.2;
+      }
+      .et-highlight-pill {
+        padding: 0.5rem 0.65rem;
+      }
+      .et-highlight-pill span {
+        line-height: 1.25;
+      }
+
+      @media (min-width: 640px) {
+        .et-main-compact {
+          padding: 1.5rem 1.5rem 2rem;
+          gap: 1.25rem;
+        }
+        .et-exams-section {
+          gap: 1rem;
+        }
+        .et-header-inner {
+          padding: 0.85rem 1.5rem;
+        }
+        .et-mobile-nav {
+          gap: 0.45rem;
+          padding-top: 0.5rem;
+          margin-top: 0.5rem;
+        }
+        .et-mobile-nav-pill {
+          min-height: 34px;
+          padding: 0.3rem 0.7rem;
+          font-size: 0.75rem;
+        }
+        .et-search-compact {
+          padding-top: 0.85rem;
+          padding-bottom: 0.85rem;
+          padding-left: 3rem;
+          padding-right: 2.75rem;
+        }
+        .et-filter-compact {
+          padding: 1.1rem 1.25rem;
+          gap: 0.75rem;
+        }
+        .et-filter-row {
+          padding-top: 0.65rem;
+        }
+        .et-compact-chip {
+          min-height: 34px;
+          padding: 0.35rem 0.8rem;
+        }
+        .et-highlight-pill {
+          padding: 0.6rem 0.75rem;
+        }
+      }
+
       @media (min-width: 768px) and (max-width: 1023px) {
         .et-tool3-tablet-span {
           grid-column: span 2 / span 2;
@@ -4344,7 +4539,7 @@
           font-size: 16px !important;
         }
         input[type="date"] {
-          min-height: 44px;
+          min-height: 42px;
         }
       }
 
@@ -4353,9 +4548,9 @@
           min-height: 42px;
         }
         .et-filter-chip {
-          min-height: 38px;
-          padding-top: 0.45rem !important;
-          padding-bottom: 0.45rem !important;
+          min-height: 36px;
+          padding-top: 0.35rem !important;
+          padding-bottom: 0.35rem !important;
         }
         .et-icon-btn {
           min-width: 40px;
@@ -4768,6 +4963,7 @@
     bookmarkedExams: loadSavedBookmarks(),
     language: loadSavedLang(),
     darkMode: loadSavedTheme(),
+    spotlightDismissed: false,
     selectedExam: null,
     copiedShare: false,
     isTooltipOpen: false,
@@ -4905,11 +5101,11 @@
 
     mount.innerHTML =
       '<header class="w-full max-w-full box-border overflow-x-hidden bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 text-white border-b-4 border-amber-500 shadow-md sticky top-0 z-40">' +
-      '<div class="w-full max-w-6xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5 box-border">' +
+      '<div class="w-full max-w-6xl mx-auto et-header-inner box-border">' +
       '<div class="flex items-center justify-between gap-2 sm:gap-4 md:gap-6 min-w-0 w-full">' +
       '<div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">' +
       '<div class="flex items-center gap-2 sm:gap-2.5 min-w-0 max-w-full">' +
-      '<a href="#" class="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center font-black text-rose-950 text-xs sm:text-sm shadow-sm shrink-0 hover:bg-amber-400 transition-colors" aria-label="ExamSetu Home">ET</a>' +
+      '<a href="#" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500 flex items-center justify-center font-black text-rose-950 text-xs sm:text-sm shadow-sm shrink-0 hover:bg-amber-400 transition-colors" aria-label="ExamSetu Home">ET</a>' +
       '<div class="flex flex-col min-w-0">' +
       '<div class="flex items-baseline gap-0.5 sm:gap-1 min-w-0">' +
       '<a href="#" class="text-[15px] sm:text-xl font-black tracking-tight text-white hover:text-amber-200 transition-colors shrink-0">Exam<span class="text-amber-400">Setu</span></a>' +
@@ -4936,13 +5132,13 @@
       '</button>' +
       '</nav>' +
       '<div class="flex items-center gap-1.5 sm:gap-2 shrink-0">' +
-      '<button type="button" data-action="open-chat" class="et-touch-btn px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-bold rounded-lg bg-amber-500 hover:bg-amber-400 text-rose-950 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-xs active:scale-95 shrink-0" title="' +
+      '<button type="button" data-action="open-chat" class="et-touch-btn px-2.5 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm font-bold rounded-lg bg-amber-500 hover:bg-amber-400 text-rose-950 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-xs active:scale-95 shrink-0" title="' +
       esc(!hi ? 'Ask AI Exam Assistant (Live Search)' : 'AI परीक्षा सहायक (लाइव सर्च)') +
       '">' +
       icon('sparkles', 'w-4 h-4') +
       '<span class="hidden sm:inline">' + esc(!hi ? 'Ask AI' : 'AI सहायक') + '</span>' +
       '</button>' +
-      '<button type="button" data-action="toggle-lang" class="et-touch-btn px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-bold rounded-lg bg-white/10 hover:bg-white/20 text-amber-300 hover:text-white border border-amber-400/40 transition-all flex items-center gap-1 sm:gap-1.5 whitespace-nowrap cursor-pointer active:scale-95 shrink-0" aria-label="Toggle language between English and Hindi">' +
+      '<button type="button" data-action="toggle-lang" class="et-touch-btn px-2.5 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm font-bold rounded-lg bg-white/10 hover:bg-white/20 text-amber-300 hover:text-white border border-amber-400/40 transition-all flex items-center gap-1 sm:gap-1.5 whitespace-nowrap cursor-pointer active:scale-95 shrink-0" aria-label="Toggle language between English and Hindi">' +
       icon('languages', 'w-4 h-4 text-amber-400') +
       '<span>' + esc(!hi ? 'हिंदी' : 'English') + '</span>' +
       '<span class="text-[10px] font-mono px-1 py-0.2 rounded bg-amber-400/20 text-amber-200 ml-0.5 hidden sm:inline">' + (!hi ? 'HI' : 'EN') + '</span>' +
@@ -4968,60 +5164,65 @@
   function renderSpotlight() {
     const mount = document.getElementById('spotlight-mount');
     if (!mount) return;
+    if (state.spotlightDismissed) {
+      mount.innerHTML = '';
+      return;
+    }
     const hi = state.language === 'hi';
+    const tickerText = hi
+      ? 'योग्यता फ़िल्टर या लाइव AI खोज से SSC, रेलवे, रक्षा व राज्यों की परीक्षा अपडेट तुरंत पाएं'
+      : 'Instant SSC, Railway, Defence & State exam updates via qualification filters or live AI search';
 
     mount.innerHTML =
-      '<div class="space-y-8">' +
-      '<div class="w-full max-w-full min-w-0 box-border p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-amber-500/10 border border-amber-300/80 dark:border-amber-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">' +
-      '<div class="flex items-start sm:items-center gap-3 min-w-0 flex-1">' +
-      '<div class="w-10 h-10 rounded-xl bg-amber-500 text-rose-950 flex items-center justify-center font-black shrink-0 shadow-xs">' +
-      icon('graduationCap', 'w-5 h-5') +
-      '</div>' +
-      '<div class="min-w-0 flex-1">' +
-      '<div class="flex flex-wrap items-center gap-2">' +
-      '<span class="text-xs font-bold uppercase tracking-wider text-rose-800 dark:text-rose-300">' +
-      esc(hi ? 'विशेष सुविधाएं' : 'Aspirant Spotlight') +
+      '<div class="et-spotlight-strip w-full max-w-full min-w-0 box-border rounded-xl bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-amber-500/10 border border-amber-300 dark:border-amber-800/60" role="region" aria-label="' +
+      esc(hi ? 'परीक्षा सूचना' : 'Aspirant Spotlight') +
+      '">' +
+      '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500 text-rose-950 text-[10px] font-black uppercase tracking-tight shrink-0">' +
+      icon('graduationCap', 'w-3 h-3 shrink-0') +
+      '<span>' + esc(hi ? '10वीं–स्नातक' : '10TH-GRAD') + '</span>' +
       '</span>' +
-      '<span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-200">' +
-      esc(hi ? '10वीं / 12वीं / स्नातक' : '10th / 12th / Graduate') +
+      '<div class="et-ticker-viewport" tabindex="0" title="' + esc(tickerText) + '">' +
+      '<div class="et-ticker-track text-xs font-medium text-slate-700 dark:text-slate-200">' +
+      '<span class="et-ticker-item">' +
+      '<span>' + esc(tickerText) + '</span>' +
+      '<span class="et-ticker-sep" aria-hidden="true"></span>' +
+      '</span>' +
+      '<span class="et-ticker-item" aria-hidden="true">' +
+      '<span>' + esc(tickerText) + '</span>' +
+      '<span class="et-ticker-sep" aria-hidden="true"></span>' +
       '</span>' +
       '</div>' +
-      '<p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 mt-0.5 break-words">' +
-      esc(
-        hi
-          ? 'अपनी शैक्षिक योग्यता ("10वीं पास", "12वीं पास", "ग्रेजुएट") अनुसार सभी एसएससी, रेलवे, रक्षा व राज्य स्तरीय भर्तियां तुरंत देखें। ताजा अपडेट के लिए AI सहायक का उपयोग करें।'
-          : 'Filter exams instantly by your qualification ("10th Pass", "12th Pass", "Graduate") across SSC, Railway, Defence & State boards. Use Ask AI for live Google Search updates.'
-      ) +
-      '</p>' +
       '</div>' +
-      '</div>' +
-      '<div class="flex flex-wrap items-center gap-2 shrink-0 max-w-full">' +
-      '<button type="button" data-action="open-chat" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-rose-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shrink-0 transition-colors shadow-sm cursor-pointer">' +
-      icon('sparkles', 'w-4 h-4') +
-      '<span>' + esc(hi ? 'AI लाइव सर्च' : 'Ask AI') + '</span>' +
+      '<button type="button" data-action="dismiss-spotlight" class="et-spotlight-close text-slate-500 hover:text-rose-800 dark:text-slate-400 dark:hover:text-amber-300 transition-colors cursor-pointer" aria-label="' +
+      esc(hi ? 'बैनर बंद करें' : 'Dismiss banner') +
+      '" title="' + esc(hi ? 'बैनर छिपाएं' : 'Dismiss') + '">' +
+      icon('x', 'w-3.5 h-3.5') +
       '</button>' +
-      '<button type="button" data-action="toggle-lang" class="px-3.5 py-2 rounded-xl bg-rose-900 hover:bg-rose-950 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shrink-0 transition-colors shadow-sm cursor-pointer">' +
-      icon('languages', 'w-4 h-4 text-amber-300') +
-      '<span>' + esc(!hi ? 'हिंदी में बदलें' : 'Switch to English') + '</span>' +
-      '</button>' +
-      '</div>' +
-      '</div>' +
-      '<div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 text-xs w-full max-w-full">' +
-      metricCard('shieldCheck', 'w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0', hi ? 'सत्यापित पोर्टल' : 'Official Links', hi ? 'सीधे सरकारी लिंक' : 'Direct government portals') +
-      metricCard('lock', 'w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0', hi ? '100% निजी टूल्स' : '100% Private Tools', hi ? 'ब्राउज़र में प्रोसेसिंग' : 'No photos saved on server') +
-      metricCard('zap', 'w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0', hi ? 'तेज़ व ऑफलाइन' : 'Fast & Offline Ready', hi ? 'बिना इंटरनेट लोड' : 'Instant client canvas') +
-      metricCard('checkCircle2', 'w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0', hi ? 'द्विभाषी हिंदी/Eng' : 'Bilingual EN/HI', hi ? 'पूर्ण हिंदी अनुवाद' : '1-click instant switch') +
-      '</div>' +
       '</div>';
+  }
+
+  function renderHighlights() {
+    const mount = document.getElementById('highlights-mount');
+    if (!mount) return;
+    const hi = state.language === 'hi';
+    mount.innerHTML =
+      '<section aria-label="' + esc(hi ? 'मुख्य विशेषताएं' : 'Platform Highlights') + '" class="w-full max-w-full min-w-0 pt-2">' +
+      '<div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs w-full max-w-full">' +
+      metricCard('shieldCheck', 'w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0', hi ? 'सत्यापित पोर्टल' : 'Official Links', hi ? 'सीधे सरकारी लिंक' : 'Direct govt portals') +
+      metricCard('lock', 'w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0', hi ? '100% निजी टूल्स' : '100% Private Tools', hi ? 'सर्वर सेव नहीं' : 'Local processing') +
+      metricCard('zap', 'w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0', hi ? 'तेज़ व ऑफलाइन' : 'Fast & Offline Ready', hi ? 'तुरंत कैनवास' : 'Instant client canvas') +
+      metricCard('checkCircle2', 'w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0', hi ? 'द्विभाषी हिंदी/Eng' : 'Bilingual EN/HI', hi ? '1-क्लिक हिंदी/Eng' : '1-click switch') +
+      '</div>' +
+      '</section>';
   }
 
   function metricCard(ic, cls, title, sub) {
     return (
-      '<div class="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-2 sm:gap-2.5 min-w-0 box-border">' +
+      '<div class="et-highlight-pill rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-2 min-w-0 box-border shadow-2xs">' +
       icon(ic, cls) +
       '<div class="min-w-0">' +
-      '<span class="font-bold text-slate-900 dark:text-white block truncate">' + esc(title) + '</span>' +
-      '<span class="text-slate-500 dark:text-slate-400 text-[11px] block">' + esc(sub) + '</span>' +
+      '<span class="font-bold text-[11px] sm:text-xs text-slate-900 dark:text-white block truncate">' + esc(title) + '</span>' +
+      '<span class="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs block truncate">' + esc(sub) + '</span>' +
       '</div>' +
       '</div>'
     );
@@ -5112,11 +5313,11 @@
     const t = DATA.TRANSLATIONS[state.language];
     mount.innerHTML =
       '<div class="relative w-full max-w-full min-w-0">' +
-      '<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">' +
-      icon('search', 'w-5 h-5') +
+      '<div class="et-search-icon text-slate-400">' +
+      icon('search', 'w-4 h-4 sm:w-5 sm:h-5') +
       '</div>' +
-      '<input id="search-input" type="search" value="' + esc(state.searchTerm) + '" placeholder="' + esc(t.searchPlaceholder) + '" class="w-full max-w-full box-border pl-12 pr-10 py-3.5 sm:py-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 shadow-sm text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all" />' +
-      '<button id="search-clear-btn" type="button" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer ' +
+      '<input id="search-input" type="search" value="' + esc(state.searchTerm) + '" placeholder="' + esc(t.searchPlaceholder) + '" class="et-search-compact w-full max-w-full box-border pl-12 pr-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 shadow-sm text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all" />' +
+      '<button id="search-clear-btn" type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer ' +
       (state.searchTerm ? '' : 'hidden') +
       '" aria-label="Clear search">' +
       icon('x', 'w-4 h-4') +
@@ -5158,36 +5359,41 @@
     ];
 
     mount.innerHTML =
-      '<div class="space-y-3.5 w-full max-w-full min-w-0 box-border bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">' +
+      '<div class="et-filter-compact w-full max-w-full min-w-0 box-border bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">' +
       '<div class="min-w-0 max-w-full">' +
-      '<div class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-rose-800 dark:text-rose-400 mb-2">' +
-      icon('graduationCap', 'w-4 h-4 text-amber-500 shrink-0') +
+      '<div class="flex items-center justify-between gap-2 mb-1">' +
+      '<div class="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-rose-800 dark:text-rose-400">' +
+      icon('graduationCap', 'w-3.5 h-3.5 text-amber-500 shrink-0') +
       '<span>' + esc(t.filterByQualification) + '</span>' +
       '</div>' +
-      '<div class="flex items-center gap-2 overflow-x-auto pb-1 et-scroll-strip w-full max-w-full min-w-0">' +
+      '<div id="exam-count-label" class="text-[11px] font-mono tabular-nums text-slate-500 dark:text-slate-400 shrink-0">' +
+      filtered.length + ' ' + esc(filtered.length === 1 ? t.examFound : t.examsFound) +
+      '</div>' +
+      '</div>' +
+      '<div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto et-scroll-strip w-full max-w-full min-w-0">' +
       quals.map(function (q) {
         const active = state.selectedQualification === q;
         const lbl = (DATA.QUALIFICATION_LABELS[q] && DATA.QUALIFICATION_LABELS[q][lang]) || q;
-        return '<button type="button" data-qual="' + esc(q) + '" class="et-filter-chip px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
+        return '<button type="button" data-qual="' + esc(q) + '" class="et-compact-chip rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
           (active ? 'bg-amber-500 text-rose-950 font-bold shadow-sm ring-1 ring-amber-600' : 'bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-500') +
           '">' + esc(lbl) + '</button>';
       }).join('') +
       '</div>' +
       '</div>' +
-      '<div class="border-t border-slate-100 dark:border-slate-800 pt-3 min-w-0 max-w-full">' +
-      '<div class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">' +
+      '<div class="et-filter-row min-w-0 max-w-full">' +
+      '<div class="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">' +
       icon('layers', 'w-3.5 h-3.5 text-rose-700 dark:text-rose-400 shrink-0') +
       '<span>' + esc(t.filterByCategory) + '</span>' +
       '</div>' +
-      '<div class="flex items-center gap-2 overflow-x-auto pb-1 et-scroll-strip w-full max-w-full min-w-0">' +
+      '<div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto et-scroll-strip w-full max-w-full min-w-0">' +
       DATA.EXAM_CATEGORIES.map(function (cat) {
         const active = state.selectedCategory === cat && !state.onlyBookmarked;
         const lbl = (DATA.CATEGORY_LABELS[cat] && DATA.CATEGORY_LABELS[cat][lang]) || cat;
-        return '<button type="button" data-cat="' + esc(cat) + '" class="et-filter-chip px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
+        return '<button type="button" data-cat="' + esc(cat) + '" class="et-compact-chip rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
           (active ? 'bg-rose-900 text-white shadow-sm ring-1 ring-amber-400' : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400') +
           '">' + esc(lbl) + '</button>';
       }).join('') +
-      '<button type="button" data-action="toggle-only-bookmarked" class="et-filter-chip px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 flex items-center gap-1.5 ' +
+      '<button type="button" data-action="toggle-only-bookmarked" class="et-compact-chip rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 flex items-center gap-1.5 ' +
       (state.onlyBookmarked ? 'bg-amber-500 text-rose-950 font-bold shadow-sm' : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400') +
       '">' +
       icon('bookmark', 'w-3.5 h-3.5', state.onlyBookmarked) +
@@ -5195,28 +5401,18 @@
       '</button>' +
       '</div>' +
       '</div>' +
-      '<div class="border-t border-slate-100 dark:border-slate-800 pt-3 min-w-0 max-w-full">' +
-      '<div class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">' +
-      '<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0"></span>' +
-      '<span>' + esc(t.filterByStatus) + '</span>' +
-      '</div>' +
-      '<div class="flex items-center gap-2 overflow-x-auto pb-1 et-scroll-strip w-full max-w-full min-w-0">' +
+      '<div class="et-filter-row min-w-0 max-w-full">' +
+      '<div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto et-scroll-strip w-full max-w-full min-w-0">' +
+      '<span class="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 shrink-0 pr-1">' +
+      '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shrink-0"></span>' +
+      '<span>' + esc(lang === 'hi' ? 'स्थिति:' : 'Status:') + '</span>' +
+      '</span>' +
       statuses.map(function (st) {
         const active = state.selectedStatus === st.id;
-        return '<button type="button" data-status="' + esc(st.id) + '" class="et-filter-chip px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
+        return '<button type="button" data-status="' + esc(st.id) + '" class="et-compact-chip rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
           (active ? 'bg-rose-900 text-white shadow-sm ring-1 ring-amber-400' : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400') +
           '">' + esc(st.label) + '</button>';
       }).join('') +
-      '</div>' +
-      '</div>' +
-      '<div class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">' +
-      '<div id="exam-count-label" class="font-mono tabular-nums">' +
-      filtered.length + ' ' + esc(filtered.length === 1 ? t.examFound : t.examsFound) +
-      '</div>' +
-      '<div class="flex flex-wrap items-center gap-2">' +
-      '<span>' + esc(t.verifiedBadge) + '</span>' +
-      '<span aria-hidden="true">&middot;</span>' +
-      '<span>' + esc(t.govtPortalsOnly) + '</span>' +
       '</div>' +
       '</div>' +
       '</div>';
@@ -7635,6 +7831,7 @@
     renderSpotlight();
     renderSearchBar();
     renderFiltersAndGrid();
+    renderHighlights();
     renderStudentTools();
     renderFooter();
     renderFloatingAiButton();
@@ -7648,13 +7845,14 @@
   rootEl.innerHTML =
     '<div class="min-h-screen w-full max-w-full box-border overflow-x-clip flex flex-col bg-slate-50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 transition-colors">' +
     '<div id="header-mount"></div>' +
-    '<main class="flex-1 max-w-6xl w-full min-w-0 mx-auto px-3 sm:px-6 py-5 sm:py-8 space-y-8 box-border">' +
+    '<main class="flex-1 max-w-6xl w-full min-w-0 mx-auto et-main-compact box-border">' +
     '<div id="spotlight-mount"></div>' +
-    '<section id="exams-list" class="space-y-6 w-full max-w-full min-w-0 box-border">' +
+    '<section id="exams-list" class="et-exams-section w-full max-w-full min-w-0 box-border">' +
     '<div id="search-wrap-mount"></div>' +
     '<div id="filter-station-mount"></div>' +
     '<div id="exam-cards-mount"></div>' +
     '</section>' +
+    '<div id="highlights-mount"></div>' +
     '<div id="tools-mount"></div>' +
     '</main>' +
     '<div id="footer-mount"></div>' +
@@ -7695,6 +7893,7 @@
     if (scrollTarget) { scrollToSection(scrollTarget); return; }
 
     const action = btn.getAttribute('data-action');
+    if (action === 'dismiss-spotlight') { state.spotlightDismissed = true; renderSpotlight(); return; }
     if (action === 'scroll-tools') { scrollToTools(); return; }
     if (action === 'scroll-top') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     if (action === 'toggle-lang') { toggleLanguage(); return; }

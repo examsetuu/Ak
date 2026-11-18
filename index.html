@@ -5343,10 +5343,74 @@
     }
   }
 
-  function renderFilterStation() {
+  var FILTER_CHIP_BASE = 'et-compact-chip rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ';
+  var FILTER_QUAL_ACTIVE = FILTER_CHIP_BASE + 'bg-amber-500 text-rose-950 font-bold shadow-sm ring-1 ring-amber-600';
+  var FILTER_QUAL_INACTIVE = FILTER_CHIP_BASE + 'bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-500';
+  var FILTER_PILL_ACTIVE = FILTER_CHIP_BASE + 'bg-rose-900 text-white shadow-sm ring-1 ring-amber-400';
+  var FILTER_PILL_INACTIVE = FILTER_CHIP_BASE + 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400';
+  var FILTER_SAVED_BASE = FILTER_CHIP_BASE + 'flex items-center gap-1.5 ';
+  var FILTER_SAVED_ACTIVE = FILTER_SAVED_BASE + 'bg-amber-500 text-rose-950 font-bold shadow-sm';
+  var FILTER_SAVED_INACTIVE = FILTER_SAVED_BASE + 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400';
+
+  function syncFilterStationInPlace(root) {
+    const lang = state.language;
+    const t = DATA.TRANSLATIONS[lang];
+
+    root.querySelectorAll('[data-qual]').forEach(function (btn) {
+      const active = state.selectedQualification === btn.getAttribute('data-qual');
+      btn.className = active ? FILTER_QUAL_ACTIVE : FILTER_QUAL_INACTIVE;
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+
+    root.querySelectorAll('[data-cat]').forEach(function (btn) {
+      const active = state.selectedCategory === btn.getAttribute('data-cat') && !state.onlyBookmarked;
+      btn.className = active ? FILTER_PILL_ACTIVE : FILTER_PILL_INACTIVE;
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+
+    const bmBtn = root.querySelector('[data-action="toggle-only-bookmarked"]');
+    if (bmBtn) {
+      bmBtn.className = state.onlyBookmarked ? FILTER_SAVED_ACTIVE : FILTER_SAVED_INACTIVE;
+      bmBtn.setAttribute('aria-pressed', state.onlyBookmarked ? 'true' : 'false');
+      const bmIcon = bmBtn.querySelector('[data-bm-icon]');
+      if (bmIcon) bmIcon.innerHTML = icon('bookmark', 'w-3.5 h-3.5', state.onlyBookmarked);
+      const bmLbl = bmBtn.querySelector('[data-bm-label]');
+      if (bmLbl) bmLbl.textContent = t.saved + ' (' + state.bookmarkedExams.length + ')';
+    }
+
+    root.querySelectorAll('[data-status]').forEach(function (btn) {
+      const active = state.selectedStatus === btn.getAttribute('data-status');
+      btn.className = active ? FILTER_PILL_ACTIVE : FILTER_PILL_INACTIVE;
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
+  function renderFilterStation(focusSelector) {
     const mount = document.getElementById('filter-station-mount');
     if (!mount) return;
     const lang = state.language;
+    const existingRoot = mount.querySelector('[data-filter-root]');
+
+    if (existingRoot && existingRoot.getAttribute('data-lang') === lang) {
+      syncFilterStationInPlace(existingRoot);
+      if (focusSelector) {
+        const targetBtn = typeof focusSelector === 'string' ? existingRoot.querySelector(focusSelector) : focusSelector;
+        if (targetBtn && existingRoot.contains(targetBtn) && typeof targetBtn.scrollIntoView === 'function') {
+          requestAnimationFrame(function () {
+            targetBtn.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+          });
+        }
+      }
+      return;
+    }
+
+    const savedScroll = {};
+    if (existingRoot) {
+      existingRoot.querySelectorAll('[data-filter-strip]').forEach(function (el) {
+        savedScroll[el.getAttribute('data-filter-strip')] = el.scrollLeft;
+      });
+    }
+
     const t = DATA.TRANSLATIONS[lang];
     const filtered = getFilteredExams();
     const quals = ['All', '10th', '12th', 'Graduate', 'PostGraduate'];
@@ -5359,7 +5423,7 @@
     ];
 
     mount.innerHTML =
-      '<div class="et-filter-compact w-full max-w-full min-w-0 box-border bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">' +
+      '<div data-filter-root="1" data-lang="' + esc(lang) + '" class="et-filter-compact w-full max-w-full min-w-0 box-border bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">' +
       '<div class="min-w-0 max-w-full">' +
       '<div class="flex items-center justify-between gap-2 mb-1">' +
       '<div class="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-rose-800 dark:text-rose-400">' +
@@ -5370,12 +5434,12 @@
       filtered.length + ' ' + esc(filtered.length === 1 ? t.examFound : t.examsFound) +
       '</div>' +
       '</div>' +
-      '<div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto et-scroll-strip w-full max-w-full min-w-0">' +
+      '<div data-filter-strip="qual" class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto et-scroll-strip w-full max-w-full min-w-0">' +
       quals.map(function (q) {
         const active = state.selectedQualification === q;
         const lbl = (DATA.QUALIFICATION_LABELS[q] && DATA.QUALIFICATION_LABELS[q][lang]) || q;
-        return '<button type="button" data-qual="' + esc(q) + '" class="et-compact-chip rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
-          (active ? 'bg-amber-500 text-rose-950 font-bold shadow-sm ring-1 ring-amber-600' : 'bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-500') +
+        return '<button type="button" data-qual="' + esc(q) + '" aria-pressed="' + (active ? 'true' : 'false') + '" class="' +
+          (active ? FILTER_QUAL_ACTIVE : FILTER_QUAL_INACTIVE) +
           '">' + esc(lbl) + '</button>';
       }).join('') +
       '</div>' +
@@ -5385,37 +5449,47 @@
       icon('layers', 'w-3.5 h-3.5 text-rose-700 dark:text-rose-400 shrink-0') +
       '<span>' + esc(t.filterByCategory) + '</span>' +
       '</div>' +
-      '<div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto et-scroll-strip w-full max-w-full min-w-0">' +
+      '<div data-filter-strip="cat" class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto et-scroll-strip w-full max-w-full min-w-0">' +
       DATA.EXAM_CATEGORIES.map(function (cat) {
         const active = state.selectedCategory === cat && !state.onlyBookmarked;
         const lbl = (DATA.CATEGORY_LABELS[cat] && DATA.CATEGORY_LABELS[cat][lang]) || cat;
-        return '<button type="button" data-cat="' + esc(cat) + '" class="et-compact-chip rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
-          (active ? 'bg-rose-900 text-white shadow-sm ring-1 ring-amber-400' : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400') +
+        return '<button type="button" data-cat="' + esc(cat) + '" aria-pressed="' + (active ? 'true' : 'false') + '" class="' +
+          (active ? FILTER_PILL_ACTIVE : FILTER_PILL_INACTIVE) +
           '">' + esc(lbl) + '</button>';
       }).join('') +
-      '<button type="button" data-action="toggle-only-bookmarked" class="et-compact-chip rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 flex items-center gap-1.5 ' +
-      (state.onlyBookmarked ? 'bg-amber-500 text-rose-950 font-bold shadow-sm' : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400') +
+      '<button type="button" data-action="toggle-only-bookmarked" aria-pressed="' + (state.onlyBookmarked ? 'true' : 'false') + '" class="' +
+      (state.onlyBookmarked ? FILTER_SAVED_ACTIVE : FILTER_SAVED_INACTIVE) +
       '">' +
-      icon('bookmark', 'w-3.5 h-3.5', state.onlyBookmarked) +
-      '<span>' + esc(t.saved) + ' (' + state.bookmarkedExams.length + ')</span>' +
+      '<span data-bm-icon="1" class="inline-flex items-center">' + icon('bookmark', 'w-3.5 h-3.5', state.onlyBookmarked) + '</span>' +
+      '<span data-bm-label="1">' + esc(t.saved) + ' (' + state.bookmarkedExams.length + ')</span>' +
       '</button>' +
       '</div>' +
       '</div>' +
       '<div class="et-filter-row min-w-0 max-w-full">' +
-      '<div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto et-scroll-strip w-full max-w-full min-w-0">' +
+      '<div data-filter-strip="status" class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto et-scroll-strip w-full max-w-full min-w-0">' +
       '<span class="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 shrink-0 pr-1">' +
       '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shrink-0"></span>' +
       '<span>' + esc(lang === 'hi' ? 'स्थिति:' : 'Status:') + '</span>' +
       '</span>' +
       statuses.map(function (st) {
         const active = state.selectedStatus === st.id;
-        return '<button type="button" data-status="' + esc(st.id) + '" class="et-compact-chip rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
-          (active ? 'bg-rose-900 text-white shadow-sm ring-1 ring-amber-400' : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400') +
+        return '<button type="button" data-status="' + esc(st.id) + '" aria-pressed="' + (active ? 'true' : 'false') + '" class="' +
+          (active ? FILTER_PILL_ACTIVE : FILTER_PILL_INACTIVE) +
           '">' + esc(st.label) + '</button>';
       }).join('') +
       '</div>' +
       '</div>' +
       '</div>';
+
+    const newRoot = mount.querySelector('[data-filter-root]');
+    if (newRoot) {
+      newRoot.querySelectorAll('[data-filter-strip]').forEach(function (el) {
+        const key = el.getAttribute('data-filter-strip');
+        if (typeof savedScroll[key] === 'number') {
+          el.scrollLeft = savedScroll[key];
+        }
+      });
+    }
   }
 
   function renderExamGridOnly() {
@@ -5496,8 +5570,8 @@
       '</div>';
   }
 
-  function renderFiltersAndGrid() {
-    renderFilterStation();
+  function renderFiltersAndGrid(focusSelector) {
+    renderFilterStation(focusSelector);
     renderExamGridOnly();
   }
 
@@ -7903,7 +7977,7 @@
     if (action === 'open-chat') { state.isChatOpen = true; renderChatModal(); renderFloatingAiButton(); return; }
     if (action === 'close-chat') { state.isChatOpen = false; renderChatModal(); renderFloatingAiButton(); return; }
     if (action === 'chat-clear') { state.chatMessages = []; renderChatThreadOnly(); return; }
-    if (action === 'toggle-only-bookmarked') { state.onlyBookmarked = !state.onlyBookmarked; renderFiltersAndGrid(); return; }
+    if (action === 'toggle-only-bookmarked') { state.onlyBookmarked = !state.onlyBookmarked; renderFiltersAndGrid(btn); return; }
     if (action === 'clear-filters') {
       state.searchTerm = '';
       state.selectedCategory = 'All';
@@ -7957,18 +8031,18 @@
     if (action === 'close-legal') { state.legalPage = null; renderLegalModal(); return; }
 
     const qual = btn.getAttribute('data-qual');
-    if (qual) { state.selectedQualification = qual; renderFiltersAndGrid(); return; }
+    if (qual) { state.selectedQualification = qual; renderFiltersAndGrid(btn); return; }
 
     const cat = btn.getAttribute('data-cat');
     if (cat) {
       if (state.onlyBookmarked) state.onlyBookmarked = false;
       state.selectedCategory = cat;
-      renderFiltersAndGrid();
+      renderFiltersAndGrid(btn);
       return;
     }
 
     const stFilter = btn.getAttribute('data-status');
-    if (stFilter) { state.selectedStatus = stFilter; renderFiltersAndGrid(); return; }
+    if (stFilter) { state.selectedStatus = stFilter; renderFiltersAndGrid(btn); return; }
 
     const bmIdx = btn.getAttribute('data-bookmark');
     if (bmIdx !== null) {
@@ -8028,7 +8102,7 @@
     const footerQual = btn.getAttribute('data-footer-qual');
     if (footerQual) {
       state.selectedQualification = footerQual;
-      renderFiltersAndGrid();
+      renderFiltersAndGrid('[data-qual="' + footerQual + '"]');
       scrollToSection('exams-list');
       return;
     }

@@ -4223,7 +4223,148 @@
           transform: none !important;
         }
       }
-    
+
+      /* Mobile & Tablet Responsive Ergonomics */
+      html, body {
+        max-width: 100%;
+        overflow-x: clip;
+        -webkit-text-size-adjust: 100%;
+        touch-action: manipulation;
+      }
+
+      *, *::before, *::after {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body.et-modal-open {
+        overflow: hidden !important;
+      }
+
+      .et-scroll-strip {
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .et-scroll-strip::-webkit-scrollbar {
+        display: none;
+      }
+
+      .et-mobile-nav {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding-top: 0.55rem;
+        margin-top: 0.55rem;
+        border-top: 1px solid rgba(245, 158, 11, 0.22);
+      }
+      .et-mobile-nav::-webkit-scrollbar {
+        display: none;
+      }
+
+      .et-mobile-nav-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        min-height: 36px;
+        padding: 0.35rem 0.7rem;
+        border-radius: 0.6rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        white-space: nowrap;
+        flex-shrink: 0;
+        color: #ffe4e6;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(251, 191, 36, 0.22);
+        transition: background-color 150ms ease, color 150ms ease, transform 120ms ease;
+        cursor: pointer;
+      }
+      .et-mobile-nav-pill:hover,
+      .et-mobile-nav-pill:active {
+        background: rgba(245, 158, 11, 0.22);
+        color: #fde68a;
+      }
+      .et-mobile-nav-pill.et-mobile-nav-accent {
+        background: rgba(245, 158, 11, 0.16);
+        color: #fcd34d;
+        border-color: rgba(251, 191, 36, 0.42);
+      }
+
+      @media (min-width: 1024px) {
+        .et-mobile-nav {
+          display: none !important;
+        }
+      }
+
+      @media (min-width: 768px) and (max-width: 1023px) {
+        .et-tool3-tablet-span {
+          grid-column: span 2 / span 2;
+        }
+      }
+
+      .et-fab-safe {
+        bottom: max(0.9rem, calc(0.75rem + env(safe-area-inset-bottom, 0px)));
+        right: max(0.75rem, calc(0.75rem + env(safe-area-inset-right, 0px)));
+      }
+
+      .et-footer-safe {
+        padding-bottom: max(5.5rem, calc(4.75rem + env(safe-area-inset-bottom, 0px))) !important;
+      }
+
+      @media (min-width: 1024px) {
+        .et-footer-safe {
+          padding-bottom: 2.5rem !important;
+        }
+      }
+
+      .et-modal-sheet {
+        max-height: 92dvh;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .et-modal-footer-safe {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem)) !important;
+      }
+
+      /* Prevent iOS/iPadOS Safari auto-zoom when focusing inputs < 16px */
+      @media (max-width: 767px) {
+        input[type="text"],
+        input[type="search"],
+        input[type="url"],
+        input[type="email"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+          font-size: 16px !important;
+        }
+        input[type="date"] {
+          min-height: 44px;
+        }
+      }
+
+      @media (pointer: coarse) {
+        .et-touch-btn {
+          min-height: 42px;
+        }
+        .et-filter-chip {
+          min-height: 38px;
+          padding-top: 0.45rem !important;
+          padding-bottom: 0.45rem !important;
+        }
+        .et-icon-btn {
+          min-width: 40px;
+          min-height: 40px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
     </style>
   </head>
   <body class="bg-[#0b0f19] text-slate-100 antialiased selection:bg-amber-100 selection:text-amber-900">
@@ -4697,16 +4838,32 @@
 
   applyTheme(false);
 
-  function scrollToTools() {
-    const el = document.getElementById('form-tools');
+  function syncBodyScrollLock() {
+    if (!document.body) return;
+    const anyModalOpen = Boolean(
+      state.selectedExam ||
+      state.guideExam ||
+      state.isSheetSyncOpen ||
+      state.legalPage ||
+      state.isChatOpen
+    );
+    document.body.classList.toggle('et-modal-open', anyModalOpen);
+  }
+
+  function scrollToSection(targetId) {
+    const el = document.getElementById(targetId || 'form-tools');
     if (!el) return;
     const header = document.querySelector('header');
     const headerHeight = header ? header.getBoundingClientRect().height : 72;
-    const targetTop = el.getBoundingClientRect().top + window.scrollY - headerHeight - 8;
+    const targetTop = el.getBoundingClientRect().top + window.scrollY - headerHeight - 10;
     window.scrollTo({
       top: Math.max(0, targetTop),
       behavior: 'smooth',
     });
+  }
+
+  function scrollToTools() {
+    scrollToSection('form-tools');
   }
 
   function toggleBookmark(examName) {
@@ -4748,11 +4905,11 @@
 
     mount.innerHTML =
       '<header class="w-full max-w-full box-border overflow-x-hidden bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 text-white border-b-4 border-amber-500 shadow-md sticky top-0 z-40">' +
-      '<div class="w-full max-w-6xl mx-auto px-3 sm:px-6 py-3 sm:py-4 box-border">' +
+      '<div class="w-full max-w-6xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5 box-border">' +
       '<div class="flex items-center justify-between gap-2 sm:gap-4 md:gap-6 min-w-0 w-full">' +
       '<div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">' +
       '<div class="flex items-center gap-2 sm:gap-2.5 min-w-0 max-w-full">' +
-      '<a href="#" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500 flex items-center justify-center font-black text-rose-950 text-xs sm:text-sm shadow-sm shrink-0 hover:bg-amber-400 transition-colors" aria-label="ExamSetu Home">ET</a>' +
+      '<a href="#" class="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center font-black text-rose-950 text-xs sm:text-sm shadow-sm shrink-0 hover:bg-amber-400 transition-colors" aria-label="ExamSetu Home">ET</a>' +
       '<div class="flex flex-col min-w-0">' +
       '<div class="flex items-baseline gap-0.5 sm:gap-1 min-w-0">' +
       '<a href="#" class="text-[15px] sm:text-xl font-black tracking-tight text-white hover:text-amber-200 transition-colors shrink-0">Exam<span class="text-amber-400">Setu</span></a>' +
@@ -4769,34 +4926,41 @@
       '</div>' +
       '</div>' +
       '<nav class="hidden lg:flex items-center gap-4 text-sm font-medium text-rose-100 shrink-0">' +
-      '<a href="#exams-list" class="hover:text-amber-300 transition-colors whitespace-nowrap shrink-0">' + esc(t.allExams) + '</a>' +
-      '<button type="button" data-action="scroll-tools" class="hover:text-amber-300 transition-colors whitespace-nowrap shrink-0 cursor-pointer">' + esc(t.resizerTool) + '</button>' +
-      '<button type="button" data-action="scroll-tools" class="hover:text-amber-300 transition-colors whitespace-nowrap shrink-0 cursor-pointer">' + esc(t.ageCalcTool) + '</button>' +
-      '<button type="button" data-action="scroll-tools" class="hover:text-amber-300 transition-colors whitespace-nowrap shrink-0 cursor-pointer">' + esc(t.pdfTool) + '</button>' +
+      '<button type="button" data-scroll-target="exams-list" class="hover:text-amber-300 transition-colors whitespace-nowrap shrink-0 cursor-pointer">' + esc(t.allExams) + '</button>' +
+      '<button type="button" data-scroll-target="tool-card-1" class="hover:text-amber-300 transition-colors whitespace-nowrap shrink-0 cursor-pointer">' + esc(t.resizerTool) + '</button>' +
+      '<button type="button" data-scroll-target="tool-card-2" class="hover:text-amber-300 transition-colors whitespace-nowrap shrink-0 cursor-pointer">' + esc(t.ageCalcTool) + '</button>' +
+      '<button type="button" data-scroll-target="tool-card-3" class="hover:text-amber-300 transition-colors whitespace-nowrap shrink-0 cursor-pointer">' + esc(t.pdfTool) + '</button>' +
       '<button type="button" data-action="open-sheet" class="hover:text-amber-300 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer text-amber-200" title="Sync live exam notifications from Google Sheet">' +
       icon('tableProperties', 'w-3.5 h-3.5') +
       '<span>' + esc(t.sheetSync) + '</span>' +
       '</button>' +
       '</nav>' +
       '<div class="flex items-center gap-1.5 sm:gap-2 shrink-0">' +
-      '<button type="button" data-action="open-chat" class="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-lg bg-amber-500 hover:bg-amber-400 text-rose-950 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-xs active:scale-95 shrink-0" title="' +
+      '<button type="button" data-action="open-chat" class="et-touch-btn px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-bold rounded-lg bg-amber-500 hover:bg-amber-400 text-rose-950 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-xs active:scale-95 shrink-0" title="' +
       esc(!hi ? 'Ask AI Exam Assistant (Live Search)' : 'AI परीक्षा सहायक (लाइव सर्च)') +
       '">' +
-      icon('sparkles', 'w-3.5 h-3.5 sm:w-4 sm:h-4') +
+      icon('sparkles', 'w-4 h-4') +
       '<span class="hidden sm:inline">' + esc(!hi ? 'Ask AI' : 'AI सहायक') + '</span>' +
       '</button>' +
-      '<button type="button" data-action="toggle-lang" class="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-lg bg-white/10 hover:bg-white/20 text-amber-300 hover:text-white border border-amber-400/40 transition-all flex items-center gap-1 sm:gap-1.5 whitespace-nowrap cursor-pointer active:scale-95 shrink-0" aria-label="Toggle language between English and Hindi">' +
-      icon('languages', 'w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400') +
+      '<button type="button" data-action="toggle-lang" class="et-touch-btn px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-bold rounded-lg bg-white/10 hover:bg-white/20 text-amber-300 hover:text-white border border-amber-400/40 transition-all flex items-center gap-1 sm:gap-1.5 whitespace-nowrap cursor-pointer active:scale-95 shrink-0" aria-label="Toggle language between English and Hindi">' +
+      icon('languages', 'w-4 h-4 text-amber-400') +
       '<span>' + esc(!hi ? 'हिंदी' : 'English') + '</span>' +
       '<span class="text-[10px] font-mono px-1 py-0.2 rounded bg-amber-400/20 text-amber-200 ml-0.5 hidden sm:inline">' + (!hi ? 'HI' : 'EN') + '</span>' +
       '</button>' +
-      '<button type="button" data-action="toggle-theme" class="p-1.5 sm:p-2 rounded-lg text-rose-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0" aria-label="Toggle theme" title="' +
+      '<button type="button" data-action="toggle-theme" class="et-icon-btn p-2 rounded-lg text-rose-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0" aria-label="Toggle theme" title="' +
       (state.darkMode ? 'Switch to light mode' : 'Switch to dark mode') +
       '">' +
       icon(state.darkMode ? 'sun' : 'moon', 'w-4 h-4') +
       '</button>' +
       '</div>' +
       '</div>' +
+      '<nav class="et-mobile-nav" aria-label="' + esc(hi ? 'त्वरित मोबाइल एवं टैबलेट नेविगेशन' : 'Quick Mobile & Tablet Navigation') + '">' +
+      '<button type="button" data-scroll-target="exams-list" class="et-mobile-nav-pill">' + icon('layers', 'w-3.5 h-3.5 text-amber-400') + '<span>' + esc(t.allExams) + '</span></button>' +
+      '<button type="button" data-scroll-target="tool-card-1" class="et-mobile-nav-pill">' + icon('crop', 'w-3.5 h-3.5 text-amber-400') + '<span>' + esc(t.resizerTool) + '</span></button>' +
+      '<button type="button" data-scroll-target="tool-card-2" class="et-mobile-nav-pill">' + icon('calculator', 'w-3.5 h-3.5 text-amber-400') + '<span>' + esc(t.ageCalcTool) + '</span></button>' +
+      '<button type="button" data-scroll-target="tool-card-3" class="et-mobile-nav-pill">' + icon('fileCheck', 'w-3.5 h-3.5 text-amber-400') + '<span>' + esc(t.pdfTool) + '</span></button>' +
+      '<button type="button" data-action="open-sheet" class="et-mobile-nav-pill et-mobile-nav-accent">' + icon('tableProperties', 'w-3.5 h-3.5') + '<span>' + esc(t.sheetSync) + '</span></button>' +
+      '</nav>' +
       '</div>' +
       '</header>';
   }
@@ -5000,11 +5164,11 @@
       icon('graduationCap', 'w-4 h-4 text-amber-500 shrink-0') +
       '<span>' + esc(t.filterByQualification) + '</span>' +
       '</div>' +
-      '<div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none w-full max-w-full min-w-0">' +
+      '<div class="flex items-center gap-2 overflow-x-auto pb-1 et-scroll-strip w-full max-w-full min-w-0">' +
       quals.map(function (q) {
         const active = state.selectedQualification === q;
         const lbl = (DATA.QUALIFICATION_LABELS[q] && DATA.QUALIFICATION_LABELS[q][lang]) || q;
-        return '<button type="button" data-qual="' + esc(q) + '" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
+        return '<button type="button" data-qual="' + esc(q) + '" class="et-filter-chip px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
           (active ? 'bg-amber-500 text-rose-950 font-bold shadow-sm ring-1 ring-amber-600' : 'bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-500') +
           '">' + esc(lbl) + '</button>';
       }).join('') +
@@ -5015,15 +5179,15 @@
       icon('layers', 'w-3.5 h-3.5 text-rose-700 dark:text-rose-400 shrink-0') +
       '<span>' + esc(t.filterByCategory) + '</span>' +
       '</div>' +
-      '<div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none w-full max-w-full min-w-0">' +
+      '<div class="flex items-center gap-2 overflow-x-auto pb-1 et-scroll-strip w-full max-w-full min-w-0">' +
       DATA.EXAM_CATEGORIES.map(function (cat) {
         const active = state.selectedCategory === cat && !state.onlyBookmarked;
         const lbl = (DATA.CATEGORY_LABELS[cat] && DATA.CATEGORY_LABELS[cat][lang]) || cat;
-        return '<button type="button" data-cat="' + esc(cat) + '" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
+        return '<button type="button" data-cat="' + esc(cat) + '" class="et-filter-chip px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
           (active ? 'bg-rose-900 text-white shadow-sm ring-1 ring-amber-400' : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400') +
           '">' + esc(lbl) + '</button>';
       }).join('') +
-      '<button type="button" data-action="toggle-only-bookmarked" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 flex items-center gap-1.5 ' +
+      '<button type="button" data-action="toggle-only-bookmarked" class="et-filter-chip px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 flex items-center gap-1.5 ' +
       (state.onlyBookmarked ? 'bg-amber-500 text-rose-950 font-bold shadow-sm' : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400') +
       '">' +
       icon('bookmark', 'w-3.5 h-3.5', state.onlyBookmarked) +
@@ -5036,10 +5200,10 @@
       '<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0"></span>' +
       '<span>' + esc(t.filterByStatus) + '</span>' +
       '</div>' +
-      '<div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none w-full max-w-full min-w-0">' +
+      '<div class="flex items-center gap-2 overflow-x-auto pb-1 et-scroll-strip w-full max-w-full min-w-0">' +
       statuses.map(function (st) {
         const active = state.selectedStatus === st.id;
-        return '<button type="button" data-status="' + esc(st.id) + '" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
+        return '<button type="button" data-status="' + esc(st.id) + '" class="et-filter-chip px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer shrink-0 ' +
           (active ? 'bg-rose-900 text-white shadow-sm ring-1 ring-amber-400' : 'bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400') +
           '">' + esc(st.label) + '</button>';
       }).join('') +
@@ -5072,14 +5236,14 @@
 
     if (filtered.length === 0) {
       mount.innerHTML =
-        '<div class="p-12 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40">' +
+        '<div class="p-8 sm:p-12 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40">' +
         '<p class="text-base font-semibold text-slate-700 dark:text-slate-300">' +
         esc(t.noExamFound) + (state.searchTerm ? ' "' + esc(state.searchTerm) + '"' : '') +
         '</p>' +
         '<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">' +
         esc(lang === 'hi' ? 'कृपया दूसरा नाम, 10वीं/12वीं/स्नातक योग्यता या फ़िल्टर बदल कर देखें।' : 'Try searching for another exam name, qualification level, or clear your filters.') +
         '</p>' +
-        '<button type="button" data-action="clear-filters" class="mt-4 px-4 py-2 rounded-lg bg-rose-900 text-white text-xs font-semibold hover:bg-rose-950 transition-colors cursor-pointer">' +
+        '<button type="button" data-action="clear-filters" class="et-touch-btn mt-4 px-4 py-2 rounded-lg bg-rose-900 text-white text-xs font-semibold hover:bg-rose-950 transition-colors cursor-pointer">' +
         esc(t.clearFilters) +
         '</button>' +
         '</div>';
@@ -5087,7 +5251,7 @@
     }
 
     mount.innerHTML =
-      '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-full min-w-0">' +
+      '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-full min-w-0">' +
       filtered.map(function (exam) {
         const origIdx = state.exams.indexOf(exam);
         const isBookmarked = state.bookmarkedExams.includes(exam.n);
@@ -5104,7 +5268,7 @@
           '<span aria-hidden="true">&middot;</span>' +
           getQualBadgeHtml(exam.q) +
           '</div>' +
-          '<button type="button" data-bookmark="' + origIdx + '" class="p-1.5 -mr-1.5 -mt-1.5 text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors cursor-pointer shrink-0" title="' +
+          '<button type="button" data-bookmark="' + origIdx + '" class="et-icon-btn p-2 -mr-2 -mt-2 rounded-lg text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors cursor-pointer shrink-0" title="' +
           (isBookmarked ? 'Remove bookmark' : 'Bookmark exam') + '">' +
           icon('bookmark', 'w-4 h-4 ' + (isBookmarked ? 'text-amber-500' : ''), isBookmarked) +
           '</button>' +
@@ -5115,17 +5279,17 @@
           '<div class="mt-2.5 max-w-full">' + getStatusBadgeHtml(exam) + '</div>' +
           '</div>' +
           '<div class="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2">' +
-          '<button type="button" data-open-exam="' + origIdx + '" class="text-xs font-bold text-rose-800 dark:text-rose-400 hover:text-amber-600 dark:hover:text-amber-400 flex items-center gap-1 transition-colors cursor-pointer">' +
+          '<button type="button" data-open-exam="' + origIdx + '" class="et-touch-btn py-1.5 text-xs font-bold text-rose-800 dark:text-rose-400 hover:text-amber-600 dark:hover:text-amber-400 flex items-center gap-1 transition-colors cursor-pointer">' +
           '<span>' + esc(t.viewDates) + '</span>' +
           icon('arrowUpRight', 'w-3.5 h-3.5') +
           '</button>' +
           '<div class="flex items-center gap-1.5">' +
-          '<button type="button" data-open-guide="' + origIdx + '" data-process="Apply Online" class="px-2.5 py-1 text-[11px] font-semibold rounded bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60 transition-colors cursor-pointer" title="Step-by-step apply guide and required checklist">' +
+          '<button type="button" data-open-guide="' + origIdx + '" data-process="Apply Online" class="et-touch-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60 transition-colors cursor-pointer" title="Step-by-step apply guide and required checklist">' +
           esc(t.applyGuide) +
           '</button>' +
           (exam.f
-            ? '<a href="' + esc(safeHref(exam.f)) + '" target="_blank" rel="noopener noreferrer" class="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors" title="' + esc(t.officialNotificationPdf) + '">' +
-              icon('fileText', 'w-3.5 h-3.5') +
+            ? '<a href="' + esc(safeHref(exam.f)) + '" target="_blank" rel="noopener noreferrer" class="et-icon-btn p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors" title="' + esc(t.officialNotificationPdf) + '">' +
+              icon('fileText', 'w-4 h-4') +
               '</a>'
             : '') +
           '</div>' +
@@ -5509,37 +5673,37 @@
       '<h2 class="text-2xl sm:text-3xl font-black text-rose-950 dark:text-white mt-1">' + esc(t.toolsSubheading) + '</h2>' +
       '<p class="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">' + esc(t.studentToolsSub) + '</p>' +
       '</div>' +
-      '<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-full min-w-0">' +
+      '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 w-full max-w-full min-w-0">' +
 
       /* Tool 1 */
-      '<div class="w-full max-w-full min-w-0 box-border bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col justify-between">' +
+      '<div id="tool-card-1" class="w-full max-w-full min-w-0 box-border bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col justify-between">' +
       '<div>' +
       '<div class="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">' +
-      '<div class="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center font-bold">1</div>' +
-      '<div><h3 class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">' + esc(t.tool1Title) + '</h3>' +
+      '<div class="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center font-bold shrink-0">1</div>' +
+      '<div class="min-w-0"><h3 class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">' + esc(t.tool1Title) + '</h3>' +
       '<p class="text-[11px] text-slate-500 dark:text-slate-400">' + esc(t.tool1Desc) + '</p></div></div>' +
       '<div class="mt-4 space-y-3.5">' +
       '<div><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">' + esc(hi ? '1. परीक्षा बोर्ड चुनें' : '1. Conducting Board / Exam') + '</label>' +
-      '<select id="t1-exam" class="w-full max-w-full min-w-0 box-border py-2 px-3 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">' +
+      '<select id="t1-exam" class="w-full max-w-full min-w-0 box-border py-2.5 px-3 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">' +
       examOpts.map(function (o) {
         return '<option value="' + esc(o[0]) + '"' + (state.resizer.exam === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
       }).join('') +
       '</select></div>' +
       '<div><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">' + esc(hi ? '2. दस्तावेज का प्रकार' : '2. Document Preset') + '</label>' +
-      '<select id="t1-doc" class="w-full max-w-full min-w-0 box-border py-2 px-3 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">' +
+      '<select id="t1-doc" class="w-full max-w-full min-w-0 box-border py-2.5 px-3 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">' +
       docPresets.map(function (d, i) {
         return '<option value="' + i + '"' + (state.resizer.docIndex === i ? ' selected' : '') + '>' + esc(hi && d.label_hi ? d.label_hi : d.label) + '</option>';
       }).join('') +
       '</select></div>' +
       '<div><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">' + esc(hi ? '3. फोटो / हस्ताक्षर फाइल चुनें' : '3. Select Image File') + '</label>' +
-      '<input id="t1-file" type="file" accept="image/*" class="w-full max-w-full overflow-hidden text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-800 dark:file:bg-amber-950 dark:file:text-amber-300 hover:file:bg-amber-200 cursor-pointer" /></div>' +
-      '<div id="t1-stamp-wrap" class="' + (currentPreset.photo ? '' : 'hidden ') + 'grid grid-cols-2 gap-2 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 w-full max-w-full min-w-0 box-border">' +
+      '<input id="t1-file" type="file" accept="image/*" class="w-full max-w-full overflow-hidden text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-800 dark:file:bg-amber-950 dark:file:text-amber-300 hover:file:bg-amber-200 cursor-pointer" /></div>' +
+      '<div id="t1-stamp-wrap" class="' + (currentPreset.photo ? '' : 'hidden ') + 'grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 w-full max-w-full min-w-0 box-border">' +
       '<div class="min-w-0"><label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1 truncate">' + esc(hi ? 'फोटो पर नाम (ऐच्छिक)' : 'Name on Photo (Opt.)') + '</label>' +
-      '<input id="t1-name" type="text" value="' + esc(state.resizer.stampName) + '" placeholder="e.g. AMIT KUMAR" class="w-full max-w-full min-w-0 box-border py-1.5 px-2 text-xs rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white uppercase" /></div>' +
+      '<input id="t1-name" type="text" value="' + esc(state.resizer.stampName) + '" placeholder="e.g. AMIT KUMAR" class="w-full max-w-full min-w-0 box-border py-2 px-2.5 text-xs rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white uppercase" /></div>' +
       '<div class="min-w-0"><label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1 truncate">' + esc(hi ? 'फोटो खींचने की तारीख (DOP)' : 'Date on Photo (Opt.)') + '</label>' +
-      '<input id="t1-date" type="text" value="' + esc(state.resizer.stampDate) + '" placeholder="e.g. 15/11/2026" class="w-full max-w-full min-w-0 box-border py-1.5 px-2 text-xs rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white" /></div>' +
+      '<input id="t1-date" type="text" value="' + esc(state.resizer.stampDate) + '" placeholder="e.g. 15/11/2026" class="w-full max-w-full min-w-0 box-border py-2 px-2.5 text-xs rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white" /></div>' +
       '</div>' +
-      '<button id="tool1-run-btn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-rose-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer">' +
+      '<button id="tool1-run-btn" type="button" class="et-touch-btn w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-rose-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer">' +
       icon('crop', 'w-4 h-4') +
       '<span>' + esc(t.resizeButton) + '</span>' +
       '</button>' +
@@ -5548,33 +5712,33 @@
       '</div></div></div>' +
 
       /* Tool 2 */
-      '<div class="w-full max-w-full min-w-0 box-border bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col justify-between">' +
+      '<div id="tool-card-2" class="w-full max-w-full min-w-0 box-border bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col justify-between">' +
       '<div>' +
       '<div class="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">' +
-      '<div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold">2</div>' +
-      '<div><h3 class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">' + esc(t.tool2Title) + '</h3>' +
+      '<div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">2</div>' +
+      '<div class="min-w-0"><h3 class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">' + esc(t.tool2Title) + '</h3>' +
       '<p class="text-[11px] text-slate-500 dark:text-slate-400">' + esc(t.tool2Desc) + '</p></div></div>' +
       '<div class="mt-4 space-y-3.5">' +
       '<div><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">' + esc(hi ? 'परीक्षा प्रीसेट (या कस्टम)' : 'Exam Preset (or Custom)') + '</label>' +
-      '<select id="t2-preset" class="w-full max-w-full min-w-0 box-border py-2 px-3 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">' +
+      '<select id="t2-preset" class="w-full max-w-full min-w-0 box-border py-2.5 px-3 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">' +
       DATA.AGE_PRESETS_DATA.map(function (p, i) {
         return '<option value="' + i + '"' + (state.age.presetIndex === i ? ' selected' : '') + '>' + esc(hi && p.name_hi ? p.name_hi : p.name) + '</option>';
       }).join('') +
       '</select></div>' +
-      '<div class="grid grid-cols-2 gap-2 w-full max-w-full min-w-0">' +
+      '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-full min-w-0">' +
       '<div class="min-w-0"><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 truncate">' + esc(hi ? 'जन्म तिथि' : 'Date of Birth') + '</label>' +
-      '<input id="t2-dob" type="date" value="' + esc(state.age.dob) + '" class="w-full max-w-full min-w-0 box-border py-2 px-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" /></div>' +
+      '<input id="t2-dob" type="date" value="' + esc(state.age.dob) + '" class="w-full max-w-full min-w-0 box-border py-2 px-2.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" /></div>' +
       '<div class="min-w-0"><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 truncate">' + esc(hi ? 'कटऑफ तिथि' : 'Cutoff Date') + '</label>' +
-      '<input id="t2-cutoff" type="date" value="' + esc(state.age.cutoffDate) + '" class="w-full max-w-full min-w-0 box-border py-2 px-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" /></div>' +
+      '<input id="t2-cutoff" type="date" value="' + esc(state.age.cutoffDate) + '" class="w-full max-w-full min-w-0 box-border py-2 px-2.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" /></div>' +
       '</div>' +
-      '<div class="grid grid-cols-2 gap-2 w-full max-w-full min-w-0">' +
+      '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-full min-w-0">' +
       '<div class="min-w-0"><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 truncate">' + esc(hi ? 'न्यूनतम आयु (वर्ष)' : 'Min Age (Yrs)') + '</label>' +
       '<input id="t2-min" type="number" step="0.5" value="' + esc(state.age.minAge) + '" class="w-full max-w-full min-w-0 box-border py-2 px-2.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" /></div>' +
       '<div class="min-w-0"><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 truncate">' + esc(hi ? 'अधिकतम आयु (सामान्य)' : 'Max Age (Gen)') + '</label>' +
       '<input id="t2-max" type="number" value="' + esc(state.age.maxAge) + '" class="w-full max-w-full min-w-0 box-border py-2 px-2.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white" /></div>' +
       '</div>' +
       '<div><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">' + esc(hi ? 'आरक्षण श्रेणी अनुसार छूट' : 'Category Relaxation') + '</label>' +
-      '<select id="t2-relax" class="w-full max-w-full min-w-0 box-border py-2 px-3 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">' +
+      '<select id="t2-relax" class="w-full max-w-full min-w-0 box-border py-2.5 px-3 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">' +
       [
         [0, hi ? 'सामान्य / ईडब्ल्यूएस (+0 वर्ष)' : 'General / EWS (+0 Years)'],
         [3, hi ? 'ओबीसी (नॉन-क्रीमी लेयर) (+3 वर्ष)' : 'OBC Non-Creamy Layer (+3 Years)'],
@@ -5586,7 +5750,7 @@
         return '<option value="' + c[0] + '"' + (state.age.catRelaxation === c[0] ? ' selected' : '') + '>' + esc(c[1]) + '</option>';
       }).join('') +
       '</select></div>' +
-      '<button id="tool2-run-btn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-rose-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer">' +
+      '<button id="tool2-run-btn" type="button" class="et-touch-btn w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-rose-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer">' +
       icon('calculator', 'w-4 h-4') +
       '<span>' + esc(t.calcAgeButton) + '</span>' +
       '</button>' +
@@ -5595,15 +5759,15 @@
       '</div></div></div>' +
 
       /* Tool 3 */
-      '<div class="w-full max-w-full min-w-0 box-border bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col justify-between">' +
+      '<div id="tool-card-3" class="et-tool3-tablet-span w-full max-w-full min-w-0 box-border bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col justify-between">' +
       '<div>' +
       '<div class="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">' +
-      '<div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold">3</div>' +
-      '<div><h3 class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">' + esc(t.tool3Title) + '</h3>' +
+      '<div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">3</div>' +
+      '<div class="min-w-0"><h3 class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">' + esc(t.tool3Title) + '</h3>' +
       '<p class="text-[11px] text-slate-500 dark:text-slate-400">' + esc(t.tool3Desc) + '</p></div></div>' +
       '<div class="mt-4 space-y-3.5">' +
       '<div><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">' + esc(hi ? '1. अधिकतम PDF साइज सीमा' : '1. Target Maximum PDF Size') + '</label>' +
-      '<select id="t3-kb" class="w-full max-w-full min-w-0 box-border py-2 px-3 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">' +
+      '<select id="t3-kb" class="w-full max-w-full min-w-0 box-border py-2.5 px-3 text-xs sm:text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">' +
       [
         [280, hi ? '300 KB से कम (UPSC / SSC / BPSC मानक)' : 'Under 300 KB (UPSC / SSC / BPSC standard)'],
         [190, hi ? '200 KB से कम' : 'Under 200 KB'],
@@ -5613,12 +5777,12 @@
       }).join('') +
       '</select></div>' +
       '<div><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">' + esc(hi ? '2. 1 से 5 दस्तावेज फोटो चुनें (JPG / PNG)' : '2. Select 1 to 5 Images (JPG / PNG)') + '</label>' +
-      '<input id="t3-files" type="file" accept="image/*" multiple class="w-full max-w-full overflow-hidden text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-800 dark:file:bg-amber-950 dark:file:text-amber-300 hover:file:bg-amber-200 cursor-pointer" />' +
+      '<input id="t3-files" type="file" accept="image/*" multiple class="w-full max-w-full overflow-hidden text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-100 file:text-amber-800 dark:file:bg-amber-950 dark:file:text-amber-300 hover:file:bg-amber-200 cursor-pointer" />' +
       '<div id="tool3-files-mount"></div></div>' +
       '<div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-[11px] text-slate-600 dark:text-slate-400">' +
       esc(hi ? 'स्वचालित बहु-पृष्ठ अभिविन्यास, JPEG उप-नमूनाकरण और सरकारी पोर्टल विनिर्देशों के अनुसार मानक PDF-1.4 प्रारूप।' : 'Automatic multi-page orientation, JPEG sub-sampling, and PDF-1.4 standards compliant with government portal file uploaders.') +
       '</div>' +
-      '<button id="tool3-run-btn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-rose-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer">' +
+      '<button id="tool3-run-btn" type="button" class="et-touch-btn w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-rose-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer">' +
       icon('fileCheck', 'w-4 h-4') +
       '<span>' + esc(t.makePdfButton) + '</span>' +
       '</button>' +
@@ -5747,8 +5911,8 @@
 
     mount.innerHTML =
       '<footer class="mt-16 w-full max-w-full box-border overflow-x-hidden bg-slate-900 text-slate-400 border-t-4 border-amber-500">' +
-      '<div class="max-w-6xl w-full mx-auto px-4 sm:px-6 py-10 box-border">' +
-      '<div class="grid grid-cols-1 md:grid-cols-3 gap-8 pb-8 border-b border-slate-800 text-xs sm:text-sm min-w-0">' +
+      '<div class="max-w-6xl w-full mx-auto px-4 sm:px-6 pt-10 et-footer-safe box-border">' +
+      '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 pb-8 border-b border-slate-800 text-xs sm:text-sm min-w-0">' +
       '<div class="min-w-0">' +
       '<div class="flex flex-wrap items-center gap-2 mb-2">' +
       '<span class="text-lg font-black tracking-tight text-white">Exam<span class="text-amber-400">Setu</span> <span class="text-base sm:text-lg font-black text-amber-200">&amp; Toolkit</span></span>' +
@@ -5757,39 +5921,39 @@
       '<p class="text-slate-400 leading-relaxed mb-3">' +
       esc(hi ? 'हर सरकारी परीक्षा की आधिकारिक अधिसूचना, सीधा लिंक, पाठ्यक्रम और फोटो-दस्तावेज टूल्स एक ही स्थान पर। बिना किसी भ्रामक विज्ञापन या फर्जी लिंक के।' : 'Every government exam notification, direct link, syllabus, and document tool in one clean, trustworthy destination. No clickbait, no spam popups.') +
       '</p>' +
-      '<div class="space-y-1 text-xs text-slate-400 min-w-0">' +
+      '<div class="space-y-1.5 text-xs text-slate-400 min-w-0">' +
       '<div class="flex items-center gap-2 min-w-0">' + icon('mail', 'w-3.5 h-3.5 text-amber-400 shrink-0') +
-      '<a href="mailto:anishrazzanishrazz789@gmail.com" class="hover:text-amber-300 transition-colors break-all">anishrazzanishrazz789@gmail.com</a></div>' +
+      '<a href="mailto:anishrazzanishrazz789@gmail.com" class="hover:text-amber-300 transition-colors break-all py-0.5">anishrazzanishrazz789@gmail.com</a></div>' +
       '<div class="flex items-center gap-2">' + icon('phone', 'w-3.5 h-3.5 text-emerald-400 shrink-0') +
-      '<a href="https://wa.me/917070385665" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-300 transition-colors">WhatsApp: +91 7070385665 (Anish Kumar)</a></div>' +
+      '<a href="https://wa.me/917070385665" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-300 transition-colors py-0.5">WhatsApp: +91 7070385665 (Anish Kumar)</a></div>' +
       '</div></div>' +
       '<div>' +
       '<div class="font-bold text-white text-xs uppercase tracking-wider mb-2.5">' + esc(hi ? 'सत्यापित आधिकारिक पोर्टल' : 'Verified Official Portals') + '</div>' +
-      '<ul class="space-y-1.5 text-xs text-slate-400">' +
+      '<ul class="space-y-2 text-xs text-slate-400">' +
       portals.map(function (p) {
-        return '<li><a href="' + p[0] + '" target="_blank" rel="noopener noreferrer" class="hover:text-amber-300 transition-colors">' + esc(p[1]) + '</a></li>';
+        return '<li><a href="' + p[0] + '" target="_blank" rel="noopener noreferrer" class="hover:text-amber-300 transition-colors inline-block py-0.5">' + esc(p[1]) + '</a></li>';
       }).join('') +
       '</ul></div>' +
-      '<div>' +
+      '<div class="sm:col-span-2 md:col-span-1">' +
       '<div class="font-bold text-white text-xs uppercase tracking-wider mb-2.5 flex items-center gap-1.5">' +
       icon('graduationCap', 'w-4 h-4 text-amber-400') +
       '<span>' + esc(hi ? 'योग्यता अनुसार भर्तियां' : 'Jobs by Qualification') + '</span></div>' +
       '<p class="text-xs text-slate-400 leading-relaxed mb-3">' +
       esc(hi ? 'अपनी शैक्षिक योग्यता के अनुसार सभी उपलब्ध सरकारी नौकरियां एक क्लिक में देखें:' : 'Instantly view all eligible central and state vacancies by your education level:') +
       '</p>' +
-      '<div class="space-y-1.5 text-xs">' +
-      '<button type="button" data-footer-qual="10th" class="w-full text-left py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-amber-300 text-slate-200 transition-colors flex items-center justify-between cursor-pointer"><span>' + esc(hi ? '10वीं पास भर्तियां (MTS, Group D, GD)' : '10th Pass Jobs (MTS, Group D, GD)') + '</span><span class="text-[10px] text-amber-400 font-mono">10th</span></button>' +
-      '<button type="button" data-footer-qual="12th" class="w-full text-left py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-amber-300 text-slate-200 transition-colors flex items-center justify-between cursor-pointer"><span>' + esc(hi ? '12वीं पास भर्तियां (CHSL, NDA, NTPC)' : '12th Pass Jobs (CHSL, NDA, NTPC)') + '</span><span class="text-[10px] text-amber-400 font-mono">12th</span></button>' +
-      '<button type="button" data-footer-qual="Graduate" class="w-full text-left py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-amber-300 text-slate-200 transition-colors flex items-center justify-between cursor-pointer"><span>' + esc(hi ? 'स्नातक / ग्रेजुएट भर्तियां (CGL, IAS, PO)' : 'Graduate Jobs (CGL, IAS, PO)') + '</span><span class="text-[10px] text-amber-400 font-mono">Grad</span></button>' +
+      '<div class="space-y-2 text-xs">' +
+      '<button type="button" data-footer-qual="10th" class="et-touch-btn w-full text-left py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-amber-300 text-slate-200 transition-colors flex items-center justify-between cursor-pointer"><span>' + esc(hi ? '10वीं पास भर्तियां (MTS, Group D, GD)' : '10th Pass Jobs (MTS, Group D, GD)') + '</span><span class="text-[10px] text-amber-400 font-mono">10th</span></button>' +
+      '<button type="button" data-footer-qual="12th" class="et-touch-btn w-full text-left py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-amber-300 text-slate-200 transition-colors flex items-center justify-between cursor-pointer"><span>' + esc(hi ? '12वीं पास भर्तियां (CHSL, NDA, NTPC)' : '12th Pass Jobs (CHSL, NDA, NTPC)') + '</span><span class="text-[10px] text-amber-400 font-mono">12th</span></button>' +
+      '<button type="button" data-footer-qual="Graduate" class="et-touch-btn w-full text-left py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-amber-300 text-slate-200 transition-colors flex items-center justify-between cursor-pointer"><span>' + esc(hi ? 'स्नातक / ग्रेजुएट भर्तियां (CGL, IAS, PO)' : 'Graduate Jobs (CGL, IAS, PO)') + '</span><span class="text-[10px] text-amber-400 font-mono">Grad</span></button>' +
       '</div></div></div>' +
-      '<div class="py-4 border-b border-slate-800/80 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm font-semibold">' +
-      '<button type="button" data-legal="about" class="text-slate-300 hover:text-amber-400 transition-colors cursor-pointer py-1">' + esc(hi ? 'हमारे बारे में (About Us)' : 'About Us') + '</button>' +
+      '<div class="py-4 border-b border-slate-800/80 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs sm:text-sm font-semibold">' +
+      '<button type="button" data-legal="about" class="et-touch-btn text-slate-300 hover:text-amber-400 transition-colors cursor-pointer px-2 py-1">' + esc(hi ? 'हमारे बारे में (About Us)' : 'About Us') + '</button>' +
       '<span class="text-slate-700 hidden sm:inline">&middot;</span>' +
-      '<button type="button" data-legal="contact" class="text-slate-300 hover:text-amber-400 transition-colors cursor-pointer py-1">' + esc(hi ? 'संपर्क करें (Contact Us)' : 'Contact Us') + '</button>' +
+      '<button type="button" data-legal="contact" class="et-touch-btn text-slate-300 hover:text-amber-400 transition-colors cursor-pointer px-2 py-1">' + esc(hi ? 'संपर्क करें (Contact Us)' : 'Contact Us') + '</button>' +
       '<span class="text-slate-700 hidden sm:inline">&middot;</span>' +
-      '<button type="button" data-legal="privacy" class="text-slate-300 hover:text-amber-400 transition-colors cursor-pointer py-1">' + esc(hi ? 'गोपनीयता नीति (Privacy Policy)' : 'Privacy Policy') + '</button>' +
+      '<button type="button" data-legal="privacy" class="et-touch-btn text-slate-300 hover:text-amber-400 transition-colors cursor-pointer px-2 py-1">' + esc(hi ? 'गोपनीयता नीति (Privacy Policy)' : 'Privacy Policy') + '</button>' +
       '<span class="text-slate-700 hidden sm:inline">&middot;</span>' +
-      '<button type="button" data-legal="disclaimer" class="text-slate-300 hover:text-amber-400 transition-colors cursor-pointer py-1">' + esc(hi ? 'अस्वीकरण (Disclaimer)' : 'Disclaimer') + '</button>' +
+      '<button type="button" data-legal="disclaimer" class="et-touch-btn text-slate-300 hover:text-amber-400 transition-colors cursor-pointer px-2 py-1">' + esc(hi ? 'अस्वीकरण (Disclaimer)' : 'Disclaimer') + '</button>' +
       '</div>' +
       '<div class="pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">' +
       '<div class="flex items-start gap-2 max-w-2xl text-left">' +
@@ -5799,7 +5963,7 @@
       '</p></div>' +
       '<div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 shrink-0">' +
       '<span class="text-[11px] text-slate-500 text-center">&copy; ' + new Date().getFullYear() + ' ExamSetu &amp; Toolkit &middot; All rights reserved</span>' +
-      '<button type="button" data-action="scroll-top" class="flex items-center gap-1.5 p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors text-xs font-semibold shrink-0 cursor-pointer">' +
+      '<button type="button" data-action="scroll-top" class="et-touch-btn flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors text-xs font-semibold shrink-0 cursor-pointer">' +
       '<span>' + esc(hi ? 'ऊपर जाएं' : 'Top') + '</span>' +
       icon('arrowUp', 'w-3.5 h-3.5') +
       '</button></div></div></div></footer>';
@@ -5814,7 +5978,7 @@
     }
     const hi = state.language === 'hi';
     mount.innerHTML =
-      '<button type="button" data-action="open-chat" class="fixed bottom-4 right-3 sm:bottom-5 sm:right-5 z-40 max-w-[calc(100vw-1.5rem)] px-4 py-3 rounded-full bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 hover:from-rose-900 hover:to-rose-800 text-amber-300 border-2 border-amber-500 shadow-xl flex items-center gap-2 text-xs sm:text-sm font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer" aria-label="Open ExamSetu &amp; Toolkit AI Assistant">' +
+      '<button type="button" data-action="open-chat" class="et-fab-safe et-touch-btn fixed z-40 max-w-[calc(100vw-1.5rem)] px-4 py-3 rounded-full bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 hover:from-rose-900 hover:to-rose-800 text-amber-300 border-2 border-amber-500 shadow-xl flex items-center gap-2 text-xs sm:text-sm font-bold transition-transform hover:scale-105 active:scale-95 cursor-pointer" aria-label="Open ExamSetu &amp; Toolkit AI Assistant">' +
       icon('sparkles', 'w-4 h-4 text-amber-400') +
       '<span>' + esc(hi ? 'AI सहायक' : 'Ask Exam AI') + '</span>' +
       '</button>';
@@ -5863,8 +6027,10 @@
     const exam = state.selectedExam;
     if (!exam) {
       mount.innerHTML = '';
+      syncBodyScrollLock();
       return;
     }
+    syncBodyScrollLock();
 
     const lang = state.language;
     const hi = lang === 'hi';
@@ -5899,12 +6065,12 @@
     function renderKvTable(rows) {
       return (
         '<div class="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">' +
-        '<table class="w-full text-left text-xs sm:text-sm border-collapse"><tbody>' +
+        '<table class="w-full text-left text-xs sm:text-sm border-collapse table-fixed"><tbody>' +
         rows.map(function (r, idx) {
           return (
             '<tr class="' + (idx % 2 === 0 ? 'bg-slate-50/60 dark:bg-slate-800/40' : 'bg-white dark:bg-slate-900') + '">' +
-            '<td class="py-2 px-3 sm:px-4 font-semibold text-slate-900 dark:text-white border-b border-slate-200/60 dark:border-slate-800/60 w-1/2 sm:w-2/5">' + esc(r[0]) + '</td>' +
-            '<td class="py-2 px-3 sm:px-4 font-mono tabular-nums text-slate-600 dark:text-slate-300 border-b border-slate-200/60 dark:border-slate-800/60">' + esc(r[1]) + '</td>' +
+            '<td class="py-2.5 px-3 sm:px-4 font-semibold text-slate-900 dark:text-white border-b border-slate-200/60 dark:border-slate-800/60 w-[44%] sm:w-2/5 break-words align-top">' + esc(r[0]) + '</td>' +
+            '<td class="py-2.5 px-3 sm:px-4 font-mono tabular-nums text-slate-600 dark:text-slate-300 border-b border-slate-200/60 dark:border-slate-800/60 break-words align-top">' + esc(r[1]) + '</td>' +
             '</tr>'
           );
         }).join('') +
@@ -5914,8 +6080,8 @@
 
     mount.innerHTML =
       '<div data-backdrop="detail" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">' +
-      '<div class="bg-white dark:bg-slate-900 border-t-4 sm:border sm:border-t-4 border-amber-500 rounded-t-3xl sm:rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl text-slate-900 dark:text-slate-100">' +
-      '<div class="p-5 sm:p-6 pb-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4">' +
+      '<div class="et-modal-sheet bg-white dark:bg-slate-900 border-t-4 sm:border sm:border-t-4 border-amber-500 rounded-t-3xl sm:rounded-2xl max-w-2xl w-full flex flex-col shadow-2xl text-slate-900 dark:text-slate-100">' +
+      '<div class="p-4 sm:p-6 pb-3.5 sm:pb-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3 sm:gap-4 shrink-0">' +
       '<div class="flex-1 min-w-0">' +
       '<div class="flex flex-wrap items-center gap-2 mb-1.5">' +
       '<span class="text-xs font-semibold text-rose-700 dark:text-rose-400">' + esc(displayOrg) + '</span>' +
@@ -5926,22 +6092,22 @@
       icon('graduationCap', 'w-3.5 h-3.5') + '<span>' + esc(qualLabel) + '</span></span>' +
       getStatusBadgeHtml(exam) +
       '</div>' +
-      '<h2 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">' + esc(displayName) + '</h2>' +
+      '<h2 class="text-lg sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white break-words">' + esc(displayName) + '</h2>' +
       '</div>' +
       '<div class="flex items-center gap-1.5 shrink-0">' +
-      '<button type="button" data-action="detail-bookmark" class="p-2 rounded-lg border transition-colors cursor-pointer ' +
+      '<button type="button" data-action="detail-bookmark" class="et-icon-btn p-2 rounded-lg border transition-colors cursor-pointer ' +
       (isBookmarked ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400' : 'border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200') +
       '" title="' + (isBookmarked ? 'Remove bookmark' : 'Bookmark this exam') + '">' +
       icon('bookmark', 'w-4 h-4', isBookmarked) +
       '</button>' +
-      '<button type="button" data-action="detail-share" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer" title="Share exam details">' +
+      '<button type="button" data-action="detail-share" class="et-icon-btn p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer" title="Share exam details">' +
       icon(state.copiedShare ? 'checkCircle2' : 'share2', 'w-4 h-4 ' + (state.copiedShare ? 'text-emerald-500' : '')) +
       '</button>' +
-      '<button type="button" data-action="close-detail" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer" aria-label="Close">' +
+      '<button type="button" data-action="close-detail" class="et-icon-btn p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer" aria-label="Close">' +
       icon('x', 'w-4 h-4') +
       '</button>' +
       '</div></div>' +
-      '<div class="p-5 sm:p-6 overflow-y-auto space-y-6 text-sm text-slate-700 dark:text-slate-300">' +
+      '<div class="p-4 sm:p-6 overflow-y-auto overscroll-contain space-y-6 text-sm text-slate-700 dark:text-slate-300">' +
       (d.sample || d.demo
         ? '<div class="p-3 rounded-lg bg-amber-50/80 dark:bg-amber-950/30 border border-dashed border-amber-300 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-300 flex items-start gap-2">' +
           icon('info', 'w-4 h-4 shrink-0 mt-0.5 text-amber-600') +
@@ -6027,8 +6193,8 @@
       '<span>' + esc(hi ? 'AI से ताजा अपडेट पूछें' : 'Verify Live via AI Search') + '</span></button>' +
       '</div></div></div>' +
 
-      '<div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 rounded-b-2xl">' +
-      '<button type="button" data-action="close-detail" class="w-full py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-bold transition-colors cursor-pointer">' +
+      '<div class="p-4 et-modal-footer-safe border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 sm:rounded-b-2xl shrink-0">' +
+      '<button type="button" data-action="close-detail" class="et-touch-btn w-full py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-bold transition-colors cursor-pointer">' +
       esc(t.closeDetails) + '</button></div>' +
       '</div></div>';
 
@@ -6067,8 +6233,10 @@
     const processType = state.guideProcess;
     if (!exam || !processType) {
       mount.innerHTML = '';
+      syncBodyScrollLock();
       return;
     }
+    syncBodyScrollLock();
 
     const hi = state.language === 'hi';
     const boardInfo = DATA.BOARD_LOGIN_DATA[exam.o] || DATA.BOARD_LOGIN_DATA['SSC'];
@@ -6101,27 +6269,28 @@
       : processType;
 
     mount.innerHTML =
-      '<div data-backdrop="guide" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">' +
-      '<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-xl w-full p-5 sm:p-6 shadow-2xl text-slate-900 dark:text-slate-100 max-h-[90vh] overflow-y-auto">' +
-      '<div class="flex items-start justify-between pb-3.5 border-b border-slate-200 dark:border-slate-800">' +
-      '<div>' +
-      '<div class="flex items-center gap-2">' +
+      '<div data-backdrop="guide" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-5 overflow-y-auto">' +
+      '<div class="et-modal-sheet bg-white dark:bg-slate-900 border-t-4 sm:border border-slate-200 dark:border-slate-800 sm:border-t-4 border-t-amber-500 sm:border-amber-500 rounded-t-3xl sm:rounded-2xl max-w-xl w-full flex flex-col shadow-2xl text-slate-900 dark:text-slate-100">' +
+      '<div class="p-4 sm:p-6 pb-3.5 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3 shrink-0">' +
+      '<div class="min-w-0 flex-1">' +
+      '<div class="flex flex-wrap items-center gap-2">' +
       '<span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">' + esc(hi ? 'आधिकारिक प्रक्रिया गाइड' : 'Official Guide') + '</span>' +
       '<span class="text-slate-300 dark:text-slate-700">&middot;</span>' +
-      '<span class="text-xs text-slate-500 dark:text-slate-400">' + esc(boardName) + '</span></div>' +
-      '<h3 class="text-lg sm:text-xl font-bold text-rose-950 dark:text-white mt-0.5">' + esc(processDisplay + ' – ' + displayName) + '</h3>' +
+      '<span class="text-xs text-slate-500 dark:text-slate-400 truncate">' + esc(boardName) + '</span></div>' +
+      '<h3 class="text-lg sm:text-xl font-bold text-rose-950 dark:text-white mt-0.5 break-words">' + esc(processDisplay + ' – ' + displayName) + '</h3>' +
       '</div>' +
-      '<button type="button" data-action="close-guide" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer" aria-label="Close">' + icon('x', 'w-5 h-5') + '</button></div>' +
+      '<button type="button" data-action="close-guide" class="et-icon-btn p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer shrink-0" aria-label="Close">' + icon('x', 'w-5 h-5') + '</button></div>' +
+      '<div class="p-4 sm:p-6 overflow-y-auto overscroll-contain space-y-5">' +
       (reqSource.length > 0
-        ? '<div class="mt-4 p-4 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50">' +
+        ? '<div class="p-3.5 sm:p-4 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50">' +
           '<div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300 mb-2.5">' +
-          icon('clipboardCheck', 'w-4 h-4 text-amber-600 dark:text-amber-400') +
+          icon('clipboardCheck', 'w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0') +
           '<span>' + esc(hi ? 'शुरू करने से पहले आवश्यक दस्तावेज (चेकलिस्ट):' : 'Things Needed Before You Proceed:') + '</span></div>' +
-          '<div class="space-y-2">' +
+          '<div class="space-y-1.5">' +
           reqSource.map(function (item, idx) {
             const isChecked = !!state.checkedItems[item];
             return (
-              '<button type="button" data-check-idx="' + idx + '" class="w-full flex items-start gap-2.5 text-left text-xs sm:text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">' +
+              '<button type="button" data-check-idx="' + idx + '" class="et-touch-btn w-full py-1.5 flex items-start gap-2.5 text-left text-xs sm:text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">' +
               icon(isChecked ? 'checkSquare' : 'square', 'w-4 h-4 shrink-0 mt-0.5 ' + (isChecked ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400')) +
               '<span class="' + (isChecked ? 'line-through text-slate-400' : '') + '">' + esc(item) + '</span></button>'
             );
@@ -6131,30 +6300,30 @@
           esc(hi ? 'दस्तावेज तैयार होने पर टिक करें। सब कुछ आपके ब्राउज़र में सुरक्षित रहता है।' : 'Tap items as you arrange them. Everything is stored locally.') +
           '</p></div>'
         : '') +
-      '<div class="mt-5">' +
+      '<div>' +
       '<h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">' + esc(hi ? 'आधिकारिक चरणबद्ध प्रक्रिया:' : 'Official Step-by-Step Procedure:') + '</h4>' +
       '<ol class="space-y-3">' +
       stepsSource.map(function (step, idx) {
         return (
           '<li class="flex items-start gap-3 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">' +
-          '<span class="flex-none w-5 h-5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 text-[11px] font-bold flex items-center justify-center mt-0.5">' + (idx + 1) + '</span>' +
+          '<span class="flex-none w-6 h-6 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 text-xs font-bold flex items-center justify-center mt-0.5">' + (idx + 1) + '</span>' +
           '<span>' + esc(step) + '</span></li>'
         );
       }).join('') +
       '</ol>' +
       '<div class="mt-3 text-[11px] text-slate-400 dark:text-slate-500 italic">' +
       esc(hi ? '* आयोग समय-समय पर पोर्टल लेआउट बदलते हैं। आधिकारिक विज्ञापन पीडीएफ के निर्देशों की भी पुष्टि करें।' : '* Portal layouts update periodically. Always verify instructions on the official notification PDF.') +
-      '</div></div>' +
-      '<div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2">' +
-      '<a href="' + esc(safeHref(targetUrl)) + '" target="_blank" rel="noopener noreferrer" class="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-rose-950 font-bold text-sm text-center flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer">' +
+      '</div></div></div>' +
+      '<div class="p-4 et-modal-footer-safe border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 sm:rounded-b-2xl flex flex-col gap-2 shrink-0">' +
+      '<a href="' + esc(safeHref(targetUrl)) + '" target="_blank" rel="noopener noreferrer" class="et-touch-btn w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-rose-950 font-bold text-sm text-center flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer">' +
       '<span>' + esc(hi ? 'आधिकारिक ' + processDisplay + ' पेज खोलें' : 'Open Official ' + processType + ' Page') + '</span>' +
       icon('externalLink', 'w-4 h-4') + '</a>' +
       (exam.o === 'Staff Selection Commission' && processType === 'Result'
-        ? '<a href="https://ssc.gov.in/login" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-4 rounded-xl bg-rose-900 hover:bg-rose-950 text-white font-semibold text-xs sm:text-sm text-center flex items-center justify-center gap-2 transition-colors shadow-sm cursor-pointer"><span>' +
+        ? '<a href="https://ssc.gov.in/login" target="_blank" rel="noopener noreferrer" class="et-touch-btn w-full py-2.5 px-4 rounded-xl bg-rose-900 hover:bg-rose-950 text-white font-semibold text-xs sm:text-sm text-center flex items-center justify-center gap-2 transition-colors shadow-sm cursor-pointer"><span>' +
           esc(hi ? 'व्यक्तिगत स्कोरकार्ड / अंक हेतु SSC लॉगिन खोलें' : 'Open SSC Candidate Login (Scorecard / Marks)') +
           '</span>' + icon('externalLink', 'w-3.5 h-3.5') + '</a>'
         : '') +
-      '<button type="button" data-action="close-guide" class="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">' +
+      '<button type="button" data-action="close-guide" class="et-touch-btn w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">' +
       esc(hi ? 'गाइड बंद करें' : 'Close Guide') + '</button></div>' +
       '</div></div>';
   }
@@ -6164,18 +6333,20 @@
     if (!mount) return;
     if (!state.isSheetSyncOpen) {
       mount.innerHTML = '';
+      syncBodyScrollLock();
       return;
     }
+    syncBodyScrollLock();
 
     mount.innerHTML =
-      '<div data-backdrop="sheet" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">' +
-      '<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl text-slate-900 dark:text-slate-100">' +
-      '<div class="flex items-start justify-between pb-4 border-b border-slate-200 dark:border-slate-800">' +
-      '<div class="flex items-center gap-3">' +
-      '<div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">' + icon('tableProperties', 'w-5 h-5') + '</div>' +
-      '<div><h3 class="text-lg font-bold text-slate-900 dark:text-white">Sync Live Exams via Google Sheets</h3>' +
+      '<div data-backdrop="sheet" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">' +
+      '<div class="et-modal-sheet bg-white dark:bg-slate-900 border-t-4 sm:border border-slate-200 dark:border-slate-800 sm:border-t-4 border-t-amber-500 sm:border-amber-500 rounded-t-3xl sm:rounded-2xl max-w-xl w-full p-5 sm:p-6 et-modal-footer-safe shadow-2xl text-slate-900 dark:text-slate-100 overflow-y-auto">' +
+      '<div class="flex items-start justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">' +
+      '<div class="flex items-center gap-3 min-w-0">' +
+      '<div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">' + icon('tableProperties', 'w-5 h-5') + '</div>' +
+      '<div class="min-w-0"><h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Sync Live Exams via Google Sheets</h3>' +
       '<p class="text-xs text-slate-500 dark:text-slate-400">Connect your spreadsheet to update notification links in real-time</p></div></div>' +
-      '<button type="button" data-action="close-sheet" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">' + icon('x', 'w-5 h-5') + '</button></div>' +
+      '<button type="button" data-action="close-sheet" class="et-icon-btn p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer shrink-0">' + icon('x', 'w-5 h-5') + '</button></div>' +
       '<div class="mt-5 space-y-4">' +
       '<div><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Published Google Sheet CSV Link</label>' +
       '<input id="sheet-url-input" type="url" value="' + esc(state.sheetUrl) + '" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500" /></div>' +
@@ -6184,7 +6355,7 @@
       '<ol class="list-decimal list-inside space-y-1"><li>In your Google Sheet, click <b>File &rarr; Share &rarr; Publish to web</b>.</li>' +
       '<li>Choose <b>Entire Document</b> or Sheet name, and format <b>Comma-separated values (.csv)</b>.</li>' +
       '<li>Click <b>Publish</b> and paste the generated URL here.</li></ol>' +
-      '<div class="mt-2 text-[11px] text-slate-500">Expected header columns: <code class="font-mono text-amber-700 dark:text-amber-400">n, o, c, u, p, a, r, k, s, f, st, sc</code></div></div>' +
+      '<div class="mt-2 text-[11px] text-slate-500">Expected header columns: <code class="font-mono text-amber-700 dark:text-amber-400 break-all">n, o, c, u, p, a, r, k, s, f, st, sc</code></div></div>' +
       (state.sheetStatus
         ? '<div class="p-3 rounded-lg text-xs font-medium flex items-start gap-2 ' +
           (state.sheetStatus.type === 'success'
@@ -6195,10 +6366,10 @@
           '<span>' + esc(state.sheetStatus.message) + '</span></div>'
         : '') +
       '</div>' +
-      '<div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">' +
-      '<button type="button" data-action="close-sheet" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">Cancel</button>' +
-      '<button type="button" id="sheet-sync-btn" ' + (state.sheetLoading ? 'disabled' : '') + ' class="px-4 py-2 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer">' +
-      icon('refreshCw', 'w-3.5 h-3.5 ' + (state.sheetLoading ? 'animate-spin' : '')) +
+      '<div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2">' +
+      '<button type="button" data-action="close-sheet" class="et-touch-btn px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">Cancel</button>' +
+      '<button type="button" id="sheet-sync-btn" ' + (state.sheetLoading ? 'disabled' : '') + ' class="et-touch-btn px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer">' +
+      icon('refreshCw', 'w-4 h-4 ' + (state.sheetLoading ? 'animate-spin' : '')) +
       '<span>' + (state.sheetLoading ? 'Syncing...' : 'Sync Exams Now') + '</span></button>' +
       '</div></div></div>';
 
@@ -6277,6 +6448,7 @@
     const activePage = state.legalPage;
     if (!activePage) {
       mount.innerHTML = '';
+      syncBodyScrollLock();
       return;
     }
 
@@ -6400,27 +6572,29 @@
         '</div></div></div>';
     }
 
+    syncBodyScrollLock();
+
     mount.innerHTML =
       '<div data-backdrop="legal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">' +
-      '<div class="bg-white dark:bg-slate-900 border-t-4 sm:border sm:border-t-4 border-amber-500 rounded-t-3xl sm:rounded-2xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl text-slate-900 dark:text-slate-100">' +
-      '<div class="p-5 sm:p-6 pb-4 bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 text-white rounded-t-2xl flex items-start justify-between gap-4 border-b border-amber-500/30">' +
-      '<div><div class="flex items-center gap-2 mb-1">' +
+      '<div class="et-modal-sheet bg-white dark:bg-slate-900 border-t-4 sm:border sm:border-t-4 border-amber-500 rounded-t-3xl sm:rounded-2xl max-w-3xl w-full flex flex-col shadow-2xl text-slate-900 dark:text-slate-100">' +
+      '<div class="p-4 sm:p-6 pb-3.5 sm:pb-4 bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 text-white rounded-t-3xl sm:rounded-t-2xl flex items-start justify-between gap-4 border-b border-amber-500/30 shrink-0">' +
+      '<div class="min-w-0"><div class="flex flex-wrap items-center gap-2 mb-1">' +
       '<span class="text-xs font-bold uppercase tracking-wider text-amber-300">ExamSetu &amp; Toolkit Legal &amp; Information</span>' +
       '<span class="text-rose-300">&middot;</span><span class="text-xs text-rose-200">' + esc(hi ? 'आधिकारिक सूचना' : 'Official Notice') + '</span></div>' +
-      '<h2 class="text-xl sm:text-2xl font-black tracking-tight text-white">' + esc(title) + '</h2></div>' +
-      '<button type="button" data-action="close-legal" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer shrink-0" aria-label="Close modal">' + icon('x', 'w-5 h-5') + '</button></div>' +
-      '<div class="px-5 sm:px-6 py-2.5 bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 overflow-x-auto scrollbar-none">' +
+      '<h2 class="text-lg sm:text-2xl font-black tracking-tight text-white">' + esc(title) + '</h2></div>' +
+      '<button type="button" data-action="close-legal" class="et-icon-btn p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer shrink-0" aria-label="Close modal">' + icon('x', 'w-5 h-5') + '</button></div>' +
+      '<div class="px-4 sm:px-6 py-2.5 bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 overflow-x-auto et-scroll-strip shrink-0">' +
       tabs.map(function (tb) {
         const isActive = activePage === tb[0];
-        return '<button type="button" data-legal="' + tb[0] + '" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ' +
+        return '<button type="button" data-legal="' + tb[0] + '" class="et-filter-chip px-3 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap cursor-pointer shrink-0 ' +
           (isActive ? 'bg-rose-900 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white') +
           '">' + esc(tb[1]) + '</button>';
       }).join('') +
       '</div>' +
-      '<div class="p-5 sm:p-6 overflow-y-auto space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">' + bodyHtml + '</div>' +
-      '<div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 rounded-b-2xl flex items-center justify-between">' +
-      '<span class="text-xs text-slate-500 dark:text-slate-400 font-medium">ExamSetu &amp; Toolkit &middot; ' + esc(hi ? 'विश्वसनीय शैक्षिक मंच' : 'Trusted Educational Portal') + '</span>' +
-      '<button type="button" data-action="close-legal" class="py-2 px-5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-bold transition-colors cursor-pointer">' + esc(hi ? 'बंद करें' : 'Close') + '</button>' +
+      '<div class="p-4 sm:p-6 overflow-y-auto overscroll-contain space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">' + bodyHtml + '</div>' +
+      '<div class="p-4 et-modal-footer-safe border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 sm:rounded-b-2xl flex items-center justify-between gap-2 shrink-0">' +
+      '<span class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">ExamSetu &amp; Toolkit &middot; ' + esc(hi ? 'विश्वसनीय शैक्षिक मंच' : 'Trusted Educational Portal') + '</span>' +
+      '<button type="button" data-action="close-legal" class="et-touch-btn py-2 px-5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-bold transition-colors cursor-pointer shrink-0">' + esc(hi ? 'बंद करें' : 'Close') + '</button>' +
       '</div></div></div>';
 
     if (activePage === 'contact') {
@@ -7279,40 +7453,42 @@
     if (!mount) return;
     if (!state.isChatOpen) {
       mount.innerHTML = '';
+      syncBodyScrollLock();
       return;
     }
+    syncBodyScrollLock();
 
     const hi = state.language === 'hi';
     const activeRoleMeta = CHAT_ROLES.find(function (r) { return r.id === state.chatRoleMode; }) || CHAT_ROLES[0];
 
     mount.innerHTML =
       '<div data-backdrop="chat" class="fixed inset-0 z-50 bg-black/65 flex items-end sm:items-center justify-center p-0 sm:p-4">' +
-      '<div class="bg-white dark:bg-slate-900 border-t-4 sm:border sm:border-t-4 border-amber-500 rounded-t-3xl sm:rounded-2xl max-w-2xl w-full h-[92dvh] sm:h-[82dvh] max-h-full flex flex-col shadow-2xl text-slate-900 dark:text-slate-100 overflow-hidden">' +
+      '<div class="et-modal-sheet bg-white dark:bg-slate-900 border-t-4 sm:border sm:border-t-4 border-amber-500 rounded-t-3xl sm:rounded-2xl max-w-2xl w-full h-[92dvh] sm:h-[82dvh] max-h-full flex flex-col shadow-2xl text-slate-900 dark:text-slate-100 overflow-hidden">' +
       '<div class="p-4 sm:px-5 sm:py-4 bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 text-white border-b border-amber-500/30 shrink-0">' +
       '<div class="flex items-start justify-between gap-3">' +
-      '<div class="flex items-center gap-2.5">' +
+      '<div class="flex items-center gap-2.5 min-w-0">' +
       '<div class="w-9 h-9 rounded-xl bg-amber-500 text-rose-950 flex items-center justify-center shadow-xs shrink-0">' + icon('sparkles', 'w-5 h-5') + '</div>' +
-      '<div>' +
-      '<h2 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2"><span>ExamSetu &amp; Toolkit AI</span>' +
+      '<div class="min-w-0">' +
+      '<h2 class="text-base sm:text-lg font-black tracking-tight text-white flex flex-wrap items-center gap-2"><span>ExamSetu &amp; Toolkit AI</span>' +
       '<span id="chat-role-badge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30">' + esc(activeRoleMeta.badge) + '</span></h2>' +
-      '<p id="chat-role-desc" class="text-[11px] sm:text-xs text-rose-200/90">' + esc(hi ? activeRoleMeta.descHi : activeRoleMeta.descEn) + '</p></div></div>' +
-      '<div class="flex items-center gap-1.5">' +
-      '<button type="button" id="chat-clear-btn" data-action="chat-clear" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-rose-100 hover:text-white transition-colors cursor-pointer ' + (state.chatMessages.length ? '' : 'hidden') + '" title="' + esc(hi ? 'चैट साफ़ करें' : 'Clear conversation') + '">' + icon('trash2', 'w-4 h-4') + '</button>' +
-      '<button type="button" data-action="close-chat" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer" aria-label="Close AI Assistant">' + icon('x', 'w-5 h-5') + '</button>' +
+      '<p id="chat-role-desc" class="text-[11px] sm:text-xs text-rose-200/90 truncate">' + esc(hi ? activeRoleMeta.descHi : activeRoleMeta.descEn) + '</p></div></div>' +
+      '<div class="flex items-center gap-1.5 shrink-0">' +
+      '<button type="button" id="chat-clear-btn" data-action="chat-clear" class="et-icon-btn p-2 rounded-lg bg-white/10 hover:bg-white/20 text-rose-100 hover:text-white transition-colors cursor-pointer ' + (state.chatMessages.length ? '' : 'hidden') + '" title="' + esc(hi ? 'चैट साफ़ करें' : 'Clear conversation') + '">' + icon('trash2', 'w-4 h-4') + '</button>' +
+      '<button type="button" data-action="close-chat" class="et-icon-btn p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer" aria-label="Close AI Assistant">' + icon('x', 'w-5 h-5') + '</button>' +
       '</div></div>' +
-      '<div id="chat-roles-row" class="mt-3 flex flex-wrap gap-1.5">' +
+      '<div id="chat-roles-row" class="mt-3 flex items-center gap-1.5 overflow-x-auto et-scroll-strip pb-0.5">' +
       CHAT_ROLES.map(function (opt) {
         const isSel = state.chatRoleMode === opt.id;
-        return '<button type="button" data-chat-role="' + opt.id + '" class="px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ' +
+        return '<button type="button" data-chat-role="' + opt.id + '" class="et-filter-chip px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shrink-0 ' +
           (isSel ? 'bg-amber-500 text-rose-950 shadow-xs' : 'bg-white/10 text-rose-100 hover:bg-white/20') + '">' +
           icon(opt.icon, 'w-3.5 h-3.5') + '<span>' + esc(hi ? opt.labelHi : opt.labelEn) + '</span></button>';
       }).join('') +
       '</div></div>' +
       '<div id="chat-thread-body" class="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-4 bg-slate-50/70 dark:bg-slate-950/60"></div>' +
-      '<form id="chat-form" class="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">' +
+      '<form id="chat-form" class="p-3 sm:p-4 et-modal-footer-safe bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">' +
       '<div class="flex items-end gap-2">' +
       '<textarea id="chat-input" rows="2" placeholder="' + esc(hi ? 'परीक्षा तिथि, एडमिट कार्ड, कट-ऑफ या फोटो साइज के बारे में पूछें...' : 'Ask about live exam dates, admit cards, cutoffs, or form rules...') + '" class="flex-1 resize-none rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-base sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500">' + esc(state.chatInput) + '</textarea>' +
-      '<button type="submit" id="chat-send-btn" class="h-11 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-rose-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 shadow-xs">' +
+      '<button type="submit" id="chat-send-btn" class="min-h-[44px] h-11 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed text-rose-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 shadow-xs">' +
       icon('send', 'w-4 h-4') + '<span class="hidden sm:inline">' + esc(hi ? 'भेजें' : 'Send') + '</span></button></div>' +
       '<p class="text-[10px] text-slate-400 mt-1.5 text-center">' + esc(hi ? 'प्राप्त जानकारी की पुष्टि हमेशा संबंधित आयोग की आधिकारिक वेबसाइट पर करें।' : 'Always verify final dates and rules on official commission portals.') + '</p>' +
       '</form></div></div>';
@@ -7339,7 +7515,9 @@
           sendChatMessage(state.chatInput);
         }
       });
-      setTimeout(function () { inp.focus(); }, 80);
+      if (window.innerWidth >= 768) {
+        setTimeout(function () { inp.focus(); }, 80);
+      }
     }
     if (form) {
       form.addEventListener('submit', function (e) {
@@ -7510,8 +7688,11 @@
       }
     }
 
-    const btn = target.closest('[data-action],[data-qual],[data-cat],[data-status],[data-bookmark],[data-open-exam],[data-open-guide],[data-detail-guide],[data-check-idx],[data-footer-qual],[data-legal],[data-chat-role],[data-starter-idx],[data-copy-msg]');
+    const btn = target.closest('[data-action],[data-scroll-target],[data-qual],[data-cat],[data-status],[data-bookmark],[data-open-exam],[data-open-guide],[data-detail-guide],[data-check-idx],[data-footer-qual],[data-legal],[data-chat-role],[data-starter-idx],[data-copy-msg]');
     if (!btn) return;
+
+    const scrollTarget = btn.getAttribute('data-scroll-target');
+    if (scrollTarget) { scrollToSection(scrollTarget); return; }
 
     const action = btn.getAttribute('data-action');
     if (action === 'scroll-tools') { scrollToTools(); return; }
@@ -7649,8 +7830,7 @@
     if (footerQual) {
       state.selectedQualification = footerQual;
       renderFiltersAndGrid();
-      const el = document.getElementById('exams-list');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      scrollToSection('exams-list');
       return;
     }
 
